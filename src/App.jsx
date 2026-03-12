@@ -18,6 +18,8 @@ import Payment from "./pages/Payment"
 import Orders from "./pages/Orders"
 import OrderDetails from "./pages/OrderDetails"
 import ProfilePage from "./pages/ProfilePage"
+import ProfileSetting from "./pages/ProfileSetting"
+
 
 /* ✅ NEW SUPPORT PAGES */
 import OrdersSupport from "./pages/OrdersSupport"
@@ -26,6 +28,7 @@ import PaymentsSupport from "./pages/PaymentsSupport"
 import AccountSupport from "./pages/AccountSupport"
 import PrivacySupport from "./pages/PrivacySupport"
 import GiftCardsSupport from "./pages/GiftCardsSupport"
+
 
 function AppContent() {
   return (
@@ -48,6 +51,10 @@ function AppContent() {
             <Route path="/address" element={<Address />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<ProfileSetting />} />
+
+            
+            
 
             {/* Orders */}
             <Route path="/orders" element={<Orders />} />

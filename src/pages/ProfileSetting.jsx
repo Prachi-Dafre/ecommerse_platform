@@ -142,15 +142,20 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Optional "Back to profile" link – consistent with "Add more items" placement */}
-        <div className="text-center mt-10">
-          <button
-            onClick={() => navigate("/profile")}
-            className="border-2 border-black px-8 py-3 text-sm font-semibold tracking-wide hover:bg-black hover:text-white transition"
-          >
-            ← Back to profile
-          </button>
-        </div>
+ <div className="flex justify-center gap-30 mt-10">
+  <button
+    onClick={() => navigate("/profile")}
+    className="border-2 border-black px-8 py-3 text-sm font-semibold tracking-wide hover:bg-black hover:text-white transition"
+  >
+    ← Back to profile
+  </button>
+  <button
+    onClick={() => navigate("/address")}
+    className="border-2 border-black px-8 py-3 text-sm font-semibold tracking-wide hover:bg-black hover:text-white transition"
+  >
+    Manage addresses
+  </button>
+</div>
 
       </div>
     </div>

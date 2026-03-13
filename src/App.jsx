@@ -18,6 +18,8 @@ import Payment from "./pages/Payment"
 import Orders from "./pages/Orders"
 import OrderDetails from "./pages/OrderDetails"
 import ProfilePage from "./pages/ProfilePage"
+import ProfileSetting from "./pages/ProfileSetting"
+
 
 /* ✅ NEW SUPPORT PAGES */
 import OrdersSupport from "./pages/OrdersSupport"
@@ -56,6 +58,10 @@ function AppContent() {
             
         <Route path="/product/:slug" element={<ProductDetails />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<ProfileSetting />} />
+
+            
+            
 
             {/* Orders */}
             <Route path="/orders" element={<Orders />} />

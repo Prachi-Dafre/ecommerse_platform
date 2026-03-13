@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-const AddressCard = ({ selected }) => {
+const AddressCard = ({ address, selected, onSelect }) => {
   const navigate = useNavigate();
 
   const handleDeliverHere = () => {
@@ -12,6 +12,7 @@ const AddressCard = ({ selected }) => {
       className={`p-4 border border-gray-200 ${
         selected ? "bg-blue-50" : "bg-white"
       }`}
+      onClick={() => onSelect(address.id)}
     >
       <div className="flex gap-3 items-start">
         {/* Radio */}
@@ -22,14 +23,14 @@ const AddressCard = ({ selected }) => {
         <div className="w-full">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-sm">
-              Gajanan Ramrao Palepwad
+              {address.name}
             </span>
 
             <span className="text-xs bg-gray-200 px-2 py-0.5">
               HOME
             </span>
 
-            <span className="text-sm">7757085531</span>
+            <span className="text-sm">{address.phone}</span>
 
             <span className="ml-auto text-blue-600 text-sm cursor-pointer">
               EDIT
@@ -37,8 +38,8 @@ const AddressCard = ({ selected }) => {
           </div>
 
           <p className="text-sm text-gray-600 mt-1">
-            Shree sant Ramdas ji Nagar, nagar kaleshwar road Vishnupuri,
-            Nanded District, Maharashtra - 431606
+            {address.address_line1}, {address.address_line2},{" "}
+            {address.city}, {address.state} - {address.pincode}
           </p>
 
           {selected && (

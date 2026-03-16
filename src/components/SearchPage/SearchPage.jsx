@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import FilterPill from "./FilterPill";
 import TopProducts from "../Explore/TopProducts";
-
+import { useParams } from "react-router-dom";
+import ProductSkeleton from "../ProductSkeleton";
 function SearchPage() {
   // ---------------- FILTER STATES ----------------
-  const [category, setCategory] = useState("all");
+   const { category: urlCategory } = useParams();
+  const [category, setCategory] = useState(urlCategory || "all");
   const [sort, setSort] = useState("new");
   const [price, setPrice] = useState("all");
 
@@ -29,17 +31,52 @@ function SearchPage() {
         `https://fannest1.co.in/driftgear/api/v1/home.php?page=1&gender=all`
       );
       const data = await res.json();
-
       if (data.success) {
         let result = data.response.data.top_products || [];
 
-        // 🔹 FRONTEND FILTERING (temporary)
-        if (category !== "all") {
-          result = result.filter(
-            (p) => p.category?.toLowerCase() === category.toLowerCase()
-          );
-        }
+/* CATEGORY FILTERING */
+if (category === "t-shirts") {
+  result = result.filter(
+    (p) =>
+      p.slug?.includes("tee") ||
+      p.slug?.includes("shirt")
+  );
+}
 
+if (category === "hoodies") {
+  result = result.filter((p) =>
+    p.slug?.includes("hoodie")
+  );
+}
+
+if (category === "sneakers") {
+  result = result.filter((p) =>
+    p.slug?.includes("sneaker")
+  );
+}
+
+if (category === "shoes") {
+  result = result.filter((p) =>
+    p.slug?.includes("shoe")
+  );
+}
+
+if (category === "minimal-art") {
+  result = result.filter((p) =>
+    p.slug?.includes("minimal")
+  );
+}
+
+if (category === "anime-posters") {
+  result = result.filter((p) =>
+    p.slug?.includes("poster")
+  );
+}
+if (!Array.isArray(result)) return;
+        // 🔹 FRONTEND FILTERING (temporary)
+        
+        
+console.log("Products after filtering:", result);
         if (sort === "popular") {
           result = result.sort(
             (a, b) => (b.purchase_count || 0) - (a.purchase_count || 0)
@@ -60,9 +97,9 @@ function SearchPage() {
   }, [category, sort, price]);
 
   return (
-    <div className="ml-9 mt-10 min-w-[1200px] rounded-2xl bg-white p-6 mx-auto">
+    <div className="mt-10 w-full max-w-7xl mx-auto rounded-2xl bg-white p-6">
       {/* ================= FILTER BAR ================= */}
-      <div className="bg-gray-200 p-6 rounded-xl mb-8">
+      <div className="fixed top-[60px] left-[260px] right-0 z-40 bg-gray-200 p-6 shadow">
         <div className="flex gap-6 flex-wrap">
           {filters.map((f, i) => (
             <div key={i} className={f.right ? "ml-auto" : ""}>
@@ -83,7 +120,11 @@ function SearchPage() {
 
       {/* ================= RESULTS ================= */}
       {loading ? (
-        <p className="text-center text-gray-500">Loading products...</p>
+        <div className="grid grid-cols-4 gap-6">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <ProductSkeleton key={i} />
+    ))}
+  </div>
       ) : (
         <TopProducts products={products} />
       )}

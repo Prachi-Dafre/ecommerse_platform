@@ -1,9 +1,9 @@
 import React from "react";
 
-function FilterPill({ label, value, width = "w-[220px]" }) {
+function FilterPill({ label, value, width = "w-[60px]" }) {
   return (
     <div
-      className={`h-16 ${width} flex items-center border border-gray-300 rounded-full bg-white overflow-hidden pl-6`}
+      className={`h-14 ${width} flex items-center border border-gray-300 rounded-full bg-white overflow-hidden pl-6 text-sm`}
     >
       <div>
         <p className="text-sm text-gray-500">{label}</p>

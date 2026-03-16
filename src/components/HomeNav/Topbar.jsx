@@ -73,8 +73,20 @@ export default function Topbar() {
 
   return (
     <>
-      <header className="relative flex items-center bg-white px-6 py-4 shadow-sm w-full text-gray-800">
-
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center bg-white px-6 py-2 shadow-sm text-gray-800">
+ {/* LEFT: LOGO */}
+  <div
+    className="flex items-center gap-2 cursor-pointer"
+    onClick={() => navigate("/")}
+  >
+     <div className="mb-2 pb-3 border-b border-gray-200">
+      <div className="mt-2">
+        <span className="text-xl font-bold text-gray-800">
+          Buy<span className="text-blue-500">More</span>
+        </span>
+        </div>
+      </div>
+  </div>
         {/* CENTER: SEARCH BAR */}
         <div className="flex-1 flex justify-center mx-6">
           <div className="relative w-full max-w-2xl">
@@ -113,26 +125,6 @@ export default function Topbar() {
             />
 
           </div>
-
-          
-
-          {/* Input */}
-          <input
-            type="text"
-            placeholder="Search Perfect Product for you"
-            onFocus={() => navigate("/search")}
-            onClick={() => navigate("/search")}
-            className="
-              w-full
-              pl-12 pr-4 py-2.5
-              border border-gray-300
-              rounded-full
-              text-sm
-              focus:outline-none
-              focus:border-black
-              cursor-pointer
-            "
-          />
         </div>
 
         {/* RIGHT: CART + PREVIEW + PROFILE/LOGIN */}

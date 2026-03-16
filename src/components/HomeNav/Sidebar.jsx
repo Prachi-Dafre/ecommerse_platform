@@ -164,7 +164,7 @@ export default function Sidebar() {
       </div>
 
       {/* Help & Support */}
-      <div className="flex flex-col gap-2 mt-5 pb-6 border-b border-gray-200">
+      <div className="flex flex-col gap-1 mt-2 pb-2 border-b border-gray-200">
         <div
           onClick={() => navigate("/help-support")}
           className="flex items-center gap-2 text-gray-700 cursor-pointer hover:text-blue-500 transition duration-200"

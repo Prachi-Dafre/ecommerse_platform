@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Star, ThumbsUp } from "lucide-react";
+import { Star, ThumbsUp, Heart, Share2 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 const ProductDetails = () => {
+  const location = useLocation();
+const passedProduct = location.state?.product;
+const [liked,setLiked] = useState(false);
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +28,8 @@ const ProductDetails = () => {
           `https://fannest1.co.in/driftgear/api/v1/products.php/${slug}`
         );
         const data = await res.json();
-        
+        console.log(data);
+        console.log(data.data);
 
         if (data && data.success && data.data) {
           setProduct(data.data);
@@ -186,25 +191,24 @@ const ProductDetails = () => {
   const totalReviews = reviews.length;
 
   // ✅ FIXED: Proper image URLs
-  const productImages = [
-    "https://via.placeholder.com/400/00CED1/ffffff?text=Front+View",
-    "https://via.placeholder.com/400/20B2AA/ffffff?text=Side+View",
-    "https://via.placeholder.com/400/48D1CC/ffffff?text=Back+View",
-    "https://via.placeholder.com/400/40E0D0/ffffff?text=Detail+View",
-  ];
+  const productImages = [];
+
+if (passedProduct?.image) {
+  productImages.push(passedProduct.image);
+}
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-28">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <h1 className="text-2xl font-bold text-gray-800">Product Details</h1>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Product Details</h2>
       </div>
 
   
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Main Product Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white rounded-lg shadow-sm p-8 mb-8">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-white/80 backdrop-blur-xl rounded-3xl shadow-md p-10 mb-10 border border-gray-100">
           {/* Left: Images */}
           <div className="flex gap-4">
             <div className="flex flex-col gap-3">
@@ -227,41 +231,81 @@ const ProductDetails = () => {
               ))}
             </div>
 
-            <div className="flex-1 rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="flex-1 rounded-3xl overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner">
+              <div className="overflow-hidden w-full h-[500px] group">
               <img
-                src={productImages[selectedImage]}
-                alt="Product"
-                className="w-full h-auto object-contain max-h-[500px]"
-              />
+               src={productImages[selectedImage]} alt={product?.name} className="w-full h-[500px] object-cover transition-transform duration-500 hover:scale-105"/>
             </div>
+              </div>
           </div>
 
           {/* Right: Product Info */}
           <div className="flex flex-col">
-            <div className="text-sm text-gray-500 mb-2">
+            <div className="text-sm text-gray-400 uppercase tracking-wide mb-2">
               {product.brand_name || "Jack& Jones"}
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {product.name}
-            </h2>
+            <div className="flex items-start justify-between mb-4">
+  <h2 className="text-2xl font-bold text-gray-900">
+    {product.name}
+  </h2>
+
+  <div className="flex gap-3">
+    {/* Wishlist */}
+    <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setLiked(!liked);
+  }}
+  className={`p-2 rounded-full transition ${
+    liked
+      ? "bg-red-100 text-red-500"
+      : "bg-gray-100 hover:bg-red-100 hover:text-red-500"
+  }`}
+>
+  <Heart size={20} fill={liked ? "currentColor" : "none"} />
+</button>
+
+    {/* Share */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+
+        const url = window.location.href;
+
+        if (navigator.share) {
+          navigator.share({
+            title: product.name,
+            url: url,
+          });
+        } else {
+          navigator.clipboard.writeText(url);
+          alert("Product link copied!");
+        }
+      }}
+      className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 hover:text-blue-500 transition"
+    >
+      <Share2 size={20} />
+    </button>
+  </div>
+</div>
             <p className="text-sm text-gray-600 mb-3 leading-relaxed">
               {product.description ||
                 "The Languages differ in their grammar, their and their the common. Everyone a new common language."}
             </p>
 
-            <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-semibold text-gray-900">
-                Price : ${price}
-              </span>
-              <span className="text-orange-500 text-sm font-semibold bg-orange-50 px-2 py-1 rounded">
-                - 20% off
-              </span>
-              <div className="ml-auto flex items-center gap-1">
-                <span className="text-lg font-semibold">
-                  {averageRating || "4.8"}
-                </span>
-                <Star size={18} fill="#FFA500" stroke="#FFA500" />
-              </div>
+            <div className="flex items-center gap-4 mb-8">
+            <span className="text-4xl font-bold text-gray-900">
+             ${price}
+            </span>
+
+            <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+             20% OFF
+            </span>
+
+            <div className="ml-auto flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+            <Star size={16} fill="#f59e0b" stroke="#f59e0b"/>
+            <span className="text-sm font-semibold">{averageRating}</span>
+            </div>
             </div>
             <div className="flex gap-10">
             <div className="mb-6 flex">
@@ -289,8 +333,7 @@ const ProductDetails = () => {
               <select
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
-              >
+                className="px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-500">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <option key={num} value={num}>
                     {num}
@@ -313,7 +356,7 @@ const ProductDetails = () => {
                 ].map((item) => (
                   <div
                     key={item.color}
-                    className="w-6 h-6 rounded-full cursor-pointer hover:scale-110 transition-transform shadow-md"
+                    className="w-7 h-7 rounded-full cursor-pointer hover:scale-110 transition-all border border-white shadow-md"
                     style={{ backgroundColor: item.color }}
                     title={item.name}
                   ></div>
@@ -321,19 +364,20 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-                Buy Now
-              </button>
-              <button className="flex-1 bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-lg border-2 border-gray-300 transition-colors">
-                Add to basket
-              </button>
+            <div className="flex gap-4 mt-6">
+             <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md hover:shadow-lg">
+              Buy Now
+             </button>
+
+             <button className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 font-semibold py-3 rounded-xl transition-all shadow-sm">
+              Add to Basket
+             </button>
             </div>
           </div>
         </div>
 
         {/* Tabs Section */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="bg-white/80 backdrop-blur rounded-3xl shadow-md p-10 border border-gray-100">
           <div className="flex border-b border-gray-200 mb-6">
             <button
               onClick={() => setActiveTab("description")}
@@ -392,7 +436,7 @@ const ProductDetails = () => {
                       reviews.map((review) => (
                         <div
                           key={review.id}
-                          className="border-b border-gray-200 pb-6 last:border-0"
+                          className="bg-gray-50 rounded-2xl p-6 shadow-sm"
                         >
                           <div className="flex items-start gap-4">
                             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -503,7 +547,7 @@ const ProductDetails = () => {
 
                   {/* Right: Average Rating */}
                   <div className="lg:col-span-1">
-                    <div className="bg-gray-50 rounded-lg p-6 sticky top-4">
+                    <div className="bg-white rounded-2xl shadow-md p-8 sticky top-6 border border-gray-100">
                       <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
                         Average rating
                       </h3>
@@ -566,7 +610,69 @@ const ProductDetails = () => {
             </div>
           )}
         </div>
+        {/* Related Products */}
+<div className="mt-16">
+  <h3 className="text-2xl font-bold mb-6">Customers also bought</h3>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    {[1,2,3,4].map((item)=>(
+      <div
+        key={item}
+        className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition cursor-pointer"
+      >
+       <div className="rounded-xl overflow-hidden h-40 mb-3 bg-gray-100">
+  <img
+    src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"
+    alt="Product"
+    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+  />
+</div>
+
+        <h4 className="text-sm font-semibold mb-1">
+          Oversized Streetwear Tee
+        </h4>
+
+        <p className="text-blue-600 font-bold">$89</p>
       </div>
+    ))}
+  </div>
+</div>
+      </div>
+{/* Sticky Buy Bar */}
+<div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-4xl bg-white border border-gray-200 shadow-xl rounded-2xl px-6 py-4 flex items-center justify-between z-50">
+
+  {/* Product Info */}
+  <div className="flex items-center gap-4">
+    {productImages[0] && (
+      <img
+        src={productImages[0]}
+        alt={product?.name}
+        className="w-12 h-12 rounded-lg object-cover"
+      />
+    )}
+
+    <div>
+      <p className="text-sm font-semibold text-gray-900">
+        {product.name}
+      </p>
+      <p className="text-sm text-blue-600 font-bold">
+        ${price}
+      </p>
+    </div>
+  </div>
+
+  {/* Buttons */}
+  <div className="flex gap-3">
+    <button className="bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold transition">
+      Add to Cart
+    </button>
+
+    <button className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-semibold transition shadow">
+      Buy Now
+    </button>
+  </div>
+
+</div>
     </div>
   );
 };

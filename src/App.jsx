@@ -43,6 +43,7 @@ function AppContent() {
       {/* Main Content */}
       <div className="flex flex-col flex-1">
         <Topbar />
+        <div className="flex-1 overflow-y-auto bg-gray-50 pt-20">
 
         <div className="flex-1 overflow-y-auto bg-gray-50">
           <Routes>
@@ -53,7 +54,7 @@ function AppContent() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/address" element={<Address />} />
             <Route path="/payment" element={<Payment />} />
-
+            <Route path="/category/:category" element={<SearchPage />} />
             // Product Details
             
         <Route path="/product/:slug" element={<ProductDetails />} />
@@ -90,6 +91,7 @@ function AppContent() {
 
 
           </Routes>
+          </div>
         </div>
       </div>
     </div>

@@ -2,15 +2,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 
 import Sidebar from "./components/HomeNav/Sidebar"
 import Topbar from "./components/HomeNav/Topbar"
-import ExplorePage from "./components/Explore/ExplorePage"
+import ExplorePage from "./pages/Home"
 import Cart from "./pages/Cart"
 import Address from "./pages/Address"
 import Payment from "./pages/Payment"
 import SearchPage from "./components/SearchPage/SearchPage"
 
 //Product Details
-import TopProducts from "./components/Explore/TopProducts";
-import ProductDetails from "./components/Explore/ProductDetails";
+import TopProducts from "./components/HomeExplore/TopProducts";
+import ProductDetails from "./components/Product/ProductDetails";
 
 function AppContent() {
   return (
@@ -29,8 +29,8 @@ function AppContent() {
             <Route path="/payment" element={<Payment />} />
 
             // Product Details
-            
-        <Route path="/product/:slug" element={<ProductDetails />} />
+
+            <Route path="/product/:slug" element={<ProductDetails />} />
 
           </Routes>
         </div>

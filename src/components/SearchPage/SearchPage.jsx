@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import FilterPill from "./FilterPill";
-import TopProducts from "../Explore/TopProducts";
+import TopProducts from "../HomeExplore/TopProducts";
 
 function SearchPage() {
   // ---------------- FILTER STATES ----------------

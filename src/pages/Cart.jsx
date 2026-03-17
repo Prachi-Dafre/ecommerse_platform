@@ -1,16 +1,17 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import CartItem from "../components/cart/CartItem"
 import CouponBox from "../components/cart/CouponBox"
 import Gifting from "../components/cart/Gifting"
 import PriceDetails from "../components/cart/PriceDetails"
 
 export default function Cart() {
-  const cartItems = [
-    { id: 1, image: "/toy.png", title: "Cute worm baby toys", price: 45.20 },
-    { id: 2, image: "/toy1.png", title: "Cute crab baby toys", price: 45.20 },
-    { id: 3, image: "/toy2.png", title: "Plush toys for babies", price: 45.20 },
-    { id: 4, image: "/toy3.png", title: "Cute snail baby toys", price: 16.20 },
-  ]
+
+  const [cartItems, setCartItems] = useState([]);
+
+useEffect(() => {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  setCartItems(cart);
+}, []);
 
   const [selectedItems, setSelectedItems] = useState([])
 
@@ -83,8 +84,9 @@ export default function Cart() {
             <div className="w-full max-w-3xl bg-white rounded-lg border border-gray-200 shadow-sm">
               {cartItems.map((item) => (
                 <CartItem
-                  key={item.id}
-                  {...item}
+  key={item.id}
+  {...item}
+  quantity={item.quantity}
                   isSelected={selectedItems.includes(item.id)}
                   onSelect={() => toggleSelect(item.id)}
                 />

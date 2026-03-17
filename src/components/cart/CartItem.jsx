@@ -5,7 +5,9 @@ export default function CartItem({
   originalPrice,
   isSelected,
   onSelect,
-}) {
+  quantity   
+})
+ {
   return (
     <div className="flex gap-4 px-4 py-3 border-b border-gray-300 last:border-b-0 text-sm w-full">
 
@@ -62,7 +64,10 @@ export default function CartItem({
 
           <div className="flex items-center border border-gray-300 rounded overflow-hidden text-xs">
             <button className="px-2 py-1 hover:bg-gray-100">−</button>
-            <span className="px-2.5 py-1 border-x border-gray-300">1</span>
+            <span className="px-2.5 py-1 border-x border-gray-300">
+  {quantity}
+</span>
+
             <button className="px-2 py-1 hover:bg-gray-100">+</button>
           </div>
         </div>

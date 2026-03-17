@@ -54,7 +54,7 @@ else {
 
 
   return (
-    <div className="fixed inset-0 bg-gray-700/95 flex justify-center z-50 py-5 overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-700/95 flex justify-center z-50 py-3 overflow-y-auto">
 
       <div className="flex max-w-6xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden relative">
 

@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 
-import Login from "../Login";
-import Register from "../Register";
+import Login from "../../pages/auth/Login";
+import Register from "../../pages/auth/Register";
 
 
 /* Dummy cart preview images */
@@ -24,6 +24,8 @@ export default function Topbar() {
   const isCartPage = location.pathname === "/cart"
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [cartCount, setCartCount] = useState(0);
+
 
   // Handle login success
   const handleLoginSuccess = (token, userName, userEmail) => {
@@ -48,6 +50,22 @@ export default function Topbar() {
       navigate("/cart");
     }
   };
+
+  useEffect(() => {
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCartCount(cart.length);
+  };
+
+  updateCartCount();
+
+  window.addEventListener("storage", updateCartCount);
+
+  return () => {
+    window.removeEventListener("storage", updateCartCount);
+  };
+}, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -131,6 +149,11 @@ export default function Topbar() {
                 }`}
             >
               🛒 Cart
+              {cartCount > 0 && (
+  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+    {cartCount}
+  </span>
+)}
             </button>
 
             {/* Cart Preview Images */}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { LayoutGrid, UserRound } from "lucide-react";
-import PromoCard from "../components/HomeExplore/PromoCard";
-import { CategoryCard, ShowMoreCard } from "../components/HomeExplore/CategoryCards";
-import TopProducts from "../components/HomeExplore/TopProducts";
-import CategoryModal from "../components/HomeExplore/CategoryModal";
+
+import PromoCard from "../components/Explore/PromoCard";
+import { CategoryCard, ShowMoreCard } from "../components/Explore/CategoryCards";
+import TopProducts from "../components/Explore/TopProducts";
+import CategoryModal from "../components/Explore/CategoryModal";
+
 
 const ExplorePage = () => {
   const [activeTab, setActiveTab] = useState("All");

@@ -196,9 +196,18 @@ const [liked,setLiked] = useState(false);
 if (passedProduct?.image) {
   productImages.push(passedProduct.image);
 }
+const salePrice = product?.variants?.[0]?.sale_price;
+const originalPrice = product?.variants?.[0]?.price;
 
+let discountPercent = 0;
+
+if (originalPrice && salePrice) {
+  discountPercent = Math.round(
+    ((originalPrice - salePrice) / originalPrice) * 100
+  );
+}
   return (
-    <div className="min-h-screen bg-gray-50 pb-28">
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2f7] via-[#f6f9fc] to-[#eef1f6] pb-28">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Product Details</h2>
@@ -293,14 +302,28 @@ if (passedProduct?.image) {
                 "The Languages differ in their grammar, their and their the common. Everyone a new common language."}
             </p>
 
-            <div className="flex items-center gap-4 mb-8">
-            <span className="text-4xl font-bold text-gray-900">
-             ${price}
-            </span>
+            <div className="flex items-center gap-6 mb-8 bg-[#f5f7fb] px-6 py-4 rounded-2xl w-fit">
+            <div className="flex flex-col gap-1 mb-6">
 
-            <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-             20% OFF
-            </span>
+  {/* Discounted Price */}
+  <span className="text-3xl font-bold text-gray-900">
+    ₹{salePrice}
+  </span>
+
+  {/* Original Price + Discount */}
+  <div className="flex items-center gap-3 text-sm">
+
+    <span className="text-green-600 font-semibold">
+      {discountPercent}% off
+    </span>
+
+    <span className="text-gray-400 line-through">
+      ₹{originalPrice}
+    </span>
+
+  </div>
+
+</div>
 
             <div className="ml-auto flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
             <Star size={16} fill="#f59e0b" stroke="#f59e0b"/>
@@ -425,6 +448,66 @@ if (passedProduct?.image) {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Right: Average Rating */}
+                  <div className="lg:col-span-1">
+                    <div className="bg-white rounded-2xl shadow-md p-8 sticky top-6 border border-gray-100">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
+                        Average rating
+                      </h3>
+
+                      <div className="text-center mb-6">
+                        <div className="text-5xl font-bold text-gray-900 mb-2">
+                          {averageRating}/5
+                        </div>
+                        <div className="flex justify-center gap-1 mb-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={20}
+                              fill={
+                                star <= Math.round(averageRating)
+                                  ? "#FFA500"
+                                  : "none"
+                              }
+                              stroke={
+                                star <= Math.round(averageRating)
+                                  ? "#FFA500"
+                                  : "#D1D5DB"
+                              }
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Based on {totalReviews} review{totalReviews !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {[5, 4, 3, 2, 1].map((star) => {
+                          const count = ratingDistribution[star] || 0;
+                          const percentage =
+                            totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+
+                          return (
+                            <div key={star} className="flex items-center gap-3">
+                              <span className="text-xs text-gray-600 w-12">
+                                {star} star
+                              </span>
+                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 transition-all"
+                                  style={{ width: `${percentage}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs text-gray-600 w-10 text-right">
+                                {count}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                   <div className="lg:col-span-2 space-y-6">
                     {reviews.length === 0 ? (
                       <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -545,66 +628,7 @@ if (passedProduct?.image) {
                     </div>
                   </div>
 
-                  {/* Right: Average Rating */}
-                  <div className="lg:col-span-1">
-                    <div className="bg-white rounded-2xl shadow-md p-8 sticky top-6 border border-gray-100">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
-                        Average rating
-                      </h3>
-
-                      <div className="text-center mb-6">
-                        <div className="text-5xl font-bold text-gray-900 mb-2">
-                          {averageRating}/5
-                        </div>
-                        <div className="flex justify-center gap-1 mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              size={20}
-                              fill={
-                                star <= Math.round(averageRating)
-                                  ? "#FFA500"
-                                  : "none"
-                              }
-                              stroke={
-                                star <= Math.round(averageRating)
-                                  ? "#FFA500"
-                                  : "#D1D5DB"
-                              }
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          Based on {totalReviews} review{totalReviews !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        {[5, 4, 3, 2, 1].map((star) => {
-                          const count = ratingDistribution[star] || 0;
-                          const percentage =
-                            totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-
-                          return (
-                            <div key={star} className="flex items-center gap-3">
-                              <span className="text-xs text-gray-600 w-12">
-                                {star} star
-                              </span>
-                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-500 transition-all"
-                                  style={{ width: `${percentage}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-xs text-gray-600 w-10 text-right">
-                                {count}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  
                 </div>
               )}
             </div>
@@ -638,41 +662,6 @@ if (passedProduct?.image) {
   </div>
 </div>
       </div>
-{/* Sticky Buy Bar */}
-<div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-4xl bg-white border border-gray-200 shadow-xl rounded-2xl px-6 py-4 flex items-center justify-between z-50">
-
-  {/* Product Info */}
-  <div className="flex items-center gap-4">
-    {productImages[0] && (
-      <img
-        src={productImages[0]}
-        alt={product?.name}
-        className="w-12 h-12 rounded-lg object-cover"
-      />
-    )}
-
-    <div>
-      <p className="text-sm font-semibold text-gray-900">
-        {product.name}
-      </p>
-      <p className="text-sm text-blue-600 font-bold">
-        ${price}
-      </p>
-    </div>
-  </div>
-
-  {/* Buttons */}
-  <div className="flex gap-3">
-    <button className="bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold transition">
-      Add to Cart
-    </button>
-
-    <button className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 font-semibold transition shadow">
-      Buy Now
-    </button>
-  </div>
-
-</div>
     </div>
   );
 };

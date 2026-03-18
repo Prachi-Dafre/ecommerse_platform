@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-
+import ContactPage from "./pages/ContactPage";
 import Sidebar from "./components/HomeNav/Sidebar"
 import Topbar from "./components/HomeNav/Topbar"
 import WishlistPage from "./pages/WishlistPage"
@@ -60,7 +60,7 @@ function AppContent() {
         <Route path="/product/:slug" element={<ProductDetails />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<ProfileSetting />} />
-
+            <Route path="/contact" element={<ContactPage />} />
             
             
 

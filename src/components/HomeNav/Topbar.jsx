@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-
+import { Heart } from "lucide-react";
 import Login from "../Login";
 import Register from "../Register";
-
+import { useEffect } from "react";
+import { BASE_URL } from "../../config"; 
 
 /* Dummy cart preview images */
 const cartPreviewImages = [
@@ -18,7 +19,7 @@ export default function Topbar() {
   const [open, setOpen] = useState(false)
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-
+const [count, setCount] = useState(0);
   const navigate = useNavigate()
   const location = useLocation()
   const isCartPage = location.pathname === "/cart"
@@ -57,7 +58,31 @@ export default function Topbar() {
     setIsLoggedIn(false);
     setOpen(false);
   };
+useEffect(() => {
+  const updateCount = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/user/wishlist.php`, {
+        headers: {
+          "X-Auth-Token": localStorage.getItem("token"),
+        },
+      });
 
+      const data = await res.json();
+
+      if (data?.data) {
+        setCount(data.data.length);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  window.addEventListener("wishlistUpdated", updateCount);
+
+  return () => {
+    window.removeEventListener("wishlistUpdated", updateCount);
+  };
+}, []);
   // Handle cart click - check login first
   const handleCartClick = () => {
     if (!isLoggedIn) {
@@ -130,6 +155,19 @@ export default function Topbar() {
         {/* RIGHT: CART + PREVIEW + PROFILE/LOGIN */}
         <div className="flex items-center gap-4">
 
+        <button
+         onClick={() => navigate("/wishlist")}
+         className={`relative flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition
+         ${location.pathname === "/wishlist"
+         ? "bg-pink-500 text-white"
+         : "bg-gray-100 hover:bg-pink-100 hover:text-pink-600"
+         }`}
+         >
+          <Heart size={20} />
+          <span className="absolute -top-1 -right-2 bg-pink-500 text-white text-xs px-1.5 rounded-full">
+         {count}
+         </span>
+         </button>
 
           {/* Cart + Preview */}
           <div className="flex items-center gap-3">

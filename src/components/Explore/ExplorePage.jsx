@@ -25,13 +25,21 @@ const ExplorePage = () => {
     console.log(
       `API CALL → page=${pageNum}, gender=${genderFilter}`
     );
-
+console.log("Request URL:", `/api/v1/home.php?page=${pageNum}&gender=${genderFilter}`);
     setLoading(true);
     try {
       const res = await fetch(
         `https://fannest1.co.in/driftgear/api/v1/home.php?page=${pageNum}&gender=${genderFilter}`
       );
-      const data = await res.json();
+    const text = await res.text();
+
+let data = {};
+try {
+  data = text ? JSON.parse(text) : {};
+} catch (err) {
+  console.error("❌ Not JSON. Likely wrong API URL");
+  return;
+}
 
       if (data.success) {
         const fetchedProducts = data.response.data.top_products || [];

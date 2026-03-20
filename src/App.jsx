@@ -5,7 +5,7 @@ import Topbar from "./components/HomeNav/Topbar"
 import WishlistPage from "./pages/WishlistPage"
 import CreateListPage from "./pages/CreateListPage"
 import ListPage from "./pages/ListPage"
-
+import { Toaster } from "react-hot-toast";
 
 
 import ExplorePage from "./components/Explore/ExplorePage"
@@ -42,6 +42,7 @@ function AppContent() {
 
       {/* Main Content */}
       <div className="flex flex-col flex-1">
+         <Toaster position="top-right" reverseOrder={false} />
         <Topbar />
         <div className="flex-1 overflow-y-auto bg-gray-50 pt-20">
 

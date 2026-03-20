@@ -42,7 +42,7 @@ export default function ListPage() {
         </h1>
 
         {items.map((item) => (
-          <div key={item.id} className="border-t border-gray-300 py-5">
+          <div key={item.product_id} className="border-t border-gray-300 py-5">
 
             <div className="flex justify-between items-start">
 

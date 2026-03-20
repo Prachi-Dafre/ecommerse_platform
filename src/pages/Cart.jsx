@@ -1,18 +1,110 @@
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import CartItem from "../components/cart/CartItem"
 import CouponBox from "../components/cart/CouponBox"
 import Gifting from "../components/cart/Gifting"
 import PriceDetails from "../components/cart/PriceDetails"
-
+import { getCart, updateCart, deleteFromCart } from "../services/cartService";
+import { BASE_URL } from "../config";
 export default function Cart() {
-  const cartItems = [
-    { id: 1, image: "/toy.png", title: "Cute worm baby toys", price: 45.20 },
-    { id: 2, image: "/toy1.png", title: "Cute crab baby toys", price: 45.20 },
-    { id: 3, image: "/toy2.png", title: "Plush toys for babies", price: 45.20 },
-    { id: 4, image: "/toy3.png", title: "Cute snail baby toys", price: 16.20 },
-  ]
-
+ const [cartItems, setCartItems] = useState([]);
+const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([])
+
+  const fetchCart = async () => {
+    try {
+      const data = await getCart(); // ✅ use service
+
+      console.log("FULL CART DATA:", data);
+
+      if (data.success) {
+      setCartItems(data.items || []);
+      } else {
+        console.error("Cart error:", data.message);
+      }
+    } catch (err) {
+      console.error("Cart fetch error:", err);
+    }
+  };
+useEffect(() => {
+  fetchCart();
+}, []);
+
+const handleDelete = async (productId) => {
+  try {
+    await deleteFromCart(productId);
+
+    // refresh cart
+    setCartItems((prev) =>
+      prev.filter((item) => item.product_id !== productId)
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const handleQuantityChange = async (productId, newQty) => {
+  try {
+    await updateCart(productId, newQty);
+
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.product_id === productId
+          ? { ...item, quantity: newQty }
+          : item
+      )
+    );
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const handleMoveToWishlist = async (item) => {
+  try {
+    // 1️⃣ Add to wishlist
+    const res = await fetch(`${BASE_URL}/api/v1/user/wishlist.php`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Auth-Token": localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        variant_id: item.variant_id,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // 2️⃣ Remove from cart
+      await fetch(`${BASE_URL}/api/v1/cart.php`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Auth-Token": localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          variant_id: item.variant_id,
+        }),
+      });
+
+      // 3️⃣ Update UI
+      setCartItems((prev) =>
+        prev.filter((i) => i.variant_id !== item.variant_id)
+      );
+
+      // 🔥 Toast
+      toast.success("Moved to wishlist 💖", {
+        icon: "✨",
+      });
+
+      // 🔥 Update Topbar count
+      window.dispatchEvent(new Event("wishlistUpdated"));
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to move item 😢");
+  }
+};
 
   const toggleSelect = (id) => {
     setSelectedItems((prev) =>
@@ -82,13 +174,20 @@ export default function Cart() {
             {/* CART ITEMS */}
             <div className="w-full max-w-3xl bg-white rounded-lg border border-gray-200 shadow-sm">
               {cartItems.map((item) => (
-                <CartItem
-                  key={item.id}
-                  {...item}
-                  isSelected={selectedItems.includes(item.id)}
-                  onSelect={() => toggleSelect(item.id)}
-                />
-              ))}
+  <CartItem
+    key={item.variant_id}
+    id={item.variant_id} // ✅ ADD THIS (IMPORTANT)
+    image={item.image}
+    title={item.name}
+    price={item.price}
+    quantity={item.quantity}
+    onRefreshCart={fetchCart}
+    isSelected={selectedItems.includes(item.variant_id)}
+    onSelect={() => toggleSelect(item.variant_id)}
+
+  
+  />
+))}
             </div>
           </div>
 

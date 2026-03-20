@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Eye, X } from "lucide-react";
-
+import { BASE_URL } from "../config";
 function Login({ onClose, onSwitch, onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,7 +11,7 @@ function Login({ onClose, onSwitch, onLoginSuccess }) {
 
   try {
     const res = await fetch(
-      "https://fannest1.co.in/driftgear/api/v1/auth/login.php",
+      `${BASE_URL}/api/v1/auth/login.php`,
       {
         method: "POST",
         headers: {
@@ -24,10 +24,12 @@ function Login({ onClose, onSwitch, onLoginSuccess }) {
       }
     );
 
-    const data = await res.json();
+    const text = await res.text();
+
+const data = text ? JSON.parse(text) : {};
     console.log("API response:", data); // DEBUG: check what API actually returns
 
-    if (data.token) {
+    if (data.success && data.token) {
   localStorage.setItem("token", data.token);
   localStorage.setItem("isLoggedIn", "true");
 

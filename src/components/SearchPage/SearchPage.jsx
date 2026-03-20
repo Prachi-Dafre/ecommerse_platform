@@ -3,6 +3,7 @@ import FilterPill from "./FilterPill";
 import TopProducts from "../Explore/TopProducts";
 import { useParams } from "react-router-dom";
 import ProductSkeleton from "../ProductSkeleton";
+import { BASE_URL } from "../../config";
 function SearchPage() {
   // ---------------- FILTER STATES ----------------
    const { category: urlCategory } = useParams();
@@ -28,9 +29,12 @@ function SearchPage() {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://fannest1.co.in/driftgear/api/v1/home.php?page=1&gender=all`
+        `${BASE_URL}/api/v1/home.php?page=1&gender=all`
       );
-      const data = await res.json();
+const text = await res.text();
+console.log("RAW RESPONSE:", text);
+
+const data = text ? JSON.parse(text) : {};
       if (data.success) {
         let result = data.response.data.top_products || [];
 

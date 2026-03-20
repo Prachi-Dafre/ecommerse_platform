@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Star, ThumbsUp, Heart, Share2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-
+import { addToCart } from "../../services/cartService";
+import { addToWishlist, removeFromWishlist } from "../../services/wishlistService";
+import toast from "react-hot-toast";
+import { BASE_URL } from "../../config";
 const ProductDetails = () => {
   const location = useLocation();
+  const actionRef = useRef(null);
 const passedProduct = location.state?.product;
 const [liked,setLiked] = useState(false);
   const { slug } = useParams();
+  const [showStickyBar, setShowStickyBar] = useState(false);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
@@ -16,18 +21,37 @@ const [liked,setLiked] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(2);
+  const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+useEffect(() => {
+  if (!actionRef.current) return;
 
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      console.log("VISIBLE:", entry.isIntersecting);
+      setShowStickyBar(!entry.isIntersecting);
+    },
+    {
+      threshold: 0,
+    }
+  );
+
+  observer.observe(actionRef.current);
+
+  return () => {
+    observer.disconnect();
+  };
+}, [product]); // 👈 IMPORTANT
   // API 1: Fetch Product Details
   useEffect(() => {
     const fetchProduct = async () => {
       
       try {
-        const res = await fetch(
-          `https://fannest1.co.in/driftgear/api/v1/products.php/${slug}`
-        );
-        const data = await res.json();
+        const res = await fetch(`${BASE_URL}/api/v1/products.php/${slug}`)
+       const text = await res.text();
+console.log(product);
+console.log(product?.variants);
+const data = text ? JSON.parse(text) : {};
         console.log(data);
         console.log(data.data);
 
@@ -49,6 +73,35 @@ const [liked,setLiked] = useState(false);
     fetchProduct();
   }, [slug]);
 
+useEffect(() => {
+  const checkWishlist = async () => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/user/wishlist.php`,
+        {
+          headers: {
+            "X-Auth-Token": localStorage.getItem("token"),
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.data) {
+       const variantId = product?.variants?.[0]?.id;
+        const exists = data.data.some(
+          (item) => item.variant_id === variantId
+        );
+        setLiked(exists);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (product?.id) checkWishlist();
+}, [product?.id]);
+
   // API 2: Fetch Reviews - Use product.id instead of slug
   useEffect(() => {
     
@@ -64,15 +117,18 @@ const [liked,setLiked] = useState(false);
     if (!product || !product.id) {
       return;
     }
-
+const variantId = product?.variants?.[0]?.id;
     setReviewsLoading(true);
     try {
       // ✅ USE PRODUCT ID, NOT SLUG
-      const url = `https://fannest1.co.in/driftgear/api/v1/products.php/${product.id}/reviews`;
+      const url = `${BASE_URL}/api/v1/products.php?variant_id=${variantId}`;
       
       const res = await fetch(url);  
       
-      const data = await res.json();
+const text = await res.text();
+
+
+const data = text ? JSON.parse(text) : {};
 
       if (data && data.success && data.data) {
         setReviews(data.data);  
@@ -110,7 +166,7 @@ const [liked,setLiked] = useState(false);
 
       // ✅ USE PRODUCT ID, NOT SLUG
       const res = await fetch(
-        `https://fannest1.co.in/driftgear/api/v1/products.php/${product.id}/reviews`,
+        `${BASE_URL}/api/v1/products.php/${product.id}/reviews`,
         {
           method: "POST",
           headers: {
@@ -119,7 +175,10 @@ const [liked,setLiked] = useState(false);
           body: JSON.stringify(requestBody),
         }
       );
-      const data = await res.json();
+     const text = await res.text();
+
+
+const data = text ? JSON.parse(text) : {};
 
       if (data && data.success) {
         alert("✅ Review submitted successfully!");
@@ -135,6 +194,59 @@ const [liked,setLiked] = useState(false);
       setSubmitLoading(false);
     }
   };
+const handleAddToCart = async () => {
+  try {
+    const variantId = product?.variants?.[0]?.id;
+
+    if (!variantId) {
+      alert("Variant not found");
+      return;
+    }
+
+    const res = await addToCart(variantId, quantity);
+    console.log("Cart:", res);
+toast.success("Item added to cart!");
+  } catch (err) {
+    console.error("Add to cart failed:", err);
+    toast.error("Failed to add item to cart.");
+  }
+};
+
+
+const handleWishlist = async (e) => {
+  e.stopPropagation();
+
+  if (!product || !product.id) return;
+ const variantId = product?.variants?.[0]?.id;
+
+  try {
+    if (liked) {
+      const res = await removeFromWishlist(variantId);
+      console.log("REMOVE RES:", res);
+
+      if (res.success) {
+        setLiked(false);
+        toast("Removed from wishlist 💔");
+      } else {
+        toast.error("Remove failed ❌");
+      }
+    } else {
+      const res = await addToWishlist(variantId);
+      console.log("ADD RES:", res); // 👈 VERY IMPORTANT
+
+      if (res.success) {
+        window.dispatchEvent(new Event("wishlistUpdated"));
+        setLiked(true);
+        toast.success("Wishlisted! You’ve got great taste 😍");
+      } else {
+        toast.error("Add failed ❌");
+      } 
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Something went wrong 😢");
+  }
+};
 
   const calculateAverageRating = () => {
     if (reviews.length === 0) return 0;
@@ -207,7 +319,7 @@ if (originalPrice && salePrice) {
   );
 }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#eef2f7] via-[#f6f9fc] to-[#eef1f6] pb-28">
+    <div  className="min-h-screen bg-gradient-to-br from-[#eef2f7] via-[#f6f9fc] to-[#eef1f6] pb-28">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Product Details</h2>
@@ -260,11 +372,8 @@ if (originalPrice && salePrice) {
 
   <div className="flex gap-3">
     {/* Wishlist */}
-    <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setLiked(!liked);
-  }}
+<button
+  onClick={handleWishlist}
   className={`p-2 rounded-full transition ${
     liked
       ? "bg-red-100 text-red-500"
@@ -387,13 +496,16 @@ if (originalPrice && salePrice) {
               </div>
             </div>
 
-            <div className="flex gap-4 mt-6">
+            <div ref={actionRef} className="flex gap-4 mt-6">
              <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md hover:shadow-lg">
               Buy Now
              </button>
 
-             <button className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 font-semibold py-3 rounded-xl transition-all shadow-sm">
-              Add to Basket
+             <button
+             onClick={handleAddToCart}
+             className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 font-semibold py-3 rounded-xl transition-all shadow-sm"
+             >
+             Add to Basket
              </button>
             </div>
           </div>
@@ -523,7 +635,7 @@ if (originalPrice && salePrice) {
                         >
                           <div className="flex items-start gap-4">
                             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                              {review.user_name.charAt(0).toUpperCase()}
+                             {(review.user_name ? review.user_name[0] : "U").toUpperCase()}
                             </div>
 
                             <div className="flex-1">
@@ -662,6 +774,47 @@ if (originalPrice && salePrice) {
   </div>
 </div>
       </div>
+      {showStickyBar && (
+  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-3xl bg-white border border-gray-200 shadow-2xl px-6 py-4 flex items-center justify-between z-50 rounded-2xl animate-[slideUp_0.3s_ease]">
+    
+    {/* Left: Price + Name */}
+    <div>
+      <p className="text-sm text-gray-500 truncate max-w-[180px]">
+        {product.name}
+      </p>
+      <p className="text-lg font-bold text-gray-900">
+        ₹{salePrice}
+      </p>
+    </div>
+
+    {/* Right: Actions */}
+    <div className="flex items-center gap-3">
+      
+      {/* Wishlist */}
+      <button
+        onClick={handleWishlist}
+        className={`p-2 rounded-full ${
+          liked ? "bg-red-100 text-red-500" : "bg-gray-100"
+        }`}
+      >
+        <Heart size={18} fill={liked ? "currentColor" : "none"} />
+      </button>
+
+      {/* Add to Cart */}
+      <button
+        onClick={handleAddToCart}
+        className="bg-gray-100 px-4 py-2 rounded-lg font-semibold"
+      >
+        Add to Cart
+      </button>
+
+      {/* Buy Now */}
+      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">
+        Buy Now
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };

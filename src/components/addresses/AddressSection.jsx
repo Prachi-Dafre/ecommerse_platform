@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AddressCard from "./AddressCard";
-
+import { BASE_URL } from "../../config";
 const AddressSection = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -19,11 +19,13 @@ const AddressSection = () => {
   });
 
   useEffect(() => {
-    localStorage.clear();
 
     const token = localStorage.getItem("token");
-   
-    fetch("https://fannest1.co.in/driftgear/api/v1/user/addresses.php", {
+   if (!token) {
+  console.error("No token found. User not logged in.");
+  return;
+}
+    fetch(`${BASE_URL}/api/v1/user/addresses.php`, {
       headers: {
         "X-Auth-Token": token,
       },
@@ -37,7 +39,7 @@ const AddressSection = () => {
       .then((data) => {
         console.log("API Response:", data);
         
-        const addressList = data.data || data;
+        const addressList = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
         setAddresses(addressList);
 
         // auto-select default address
@@ -66,7 +68,7 @@ const AddressSection = () => {
     
     const token = localStorage.getItem("token");
 
-    fetch("https://fannest1.co.in/driftgear/api/v1/user/addresses.php", {
+    fetch(`https://fannest1.co.in/driftgear/api/v1/user/addresses.php`, {
       method: "POST",
       headers: {
         "X-Auth-Token": token,

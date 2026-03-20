@@ -1,8 +1,28 @@
 import { useNavigate } from "react-router-dom";
 
 const AddressCard = ({ address, selected, onSelect }) => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+const handleDelete = async () => {
+  const token = localStorage.getItem("token");
 
+  try {
+    await fetch(
+      `/v1/user/addresses.php/${address.id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "X-Auth-Token": token,
+          "Content-Type": "application/json"
+        },
+      }
+    );
+
+    alert("Address deleted");
+
+  } catch (err) {
+    console.error(err);
+  }
+};
   const handleDeliverHere = () => {
     navigate("/payment");
   };

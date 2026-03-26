@@ -1,4 +1,5 @@
 import { useState,useEffect } from "react"
+import { addToWishlist } from "../services/wishlistService"; 
 import CartItem from "../components/cart/CartItem"
 import CouponBox from "../components/cart/CouponBox"
 import Gifting from "../components/cart/Gifting"
@@ -58,51 +59,29 @@ const handleQuantityChange = async (productId, newQty) => {
   }
 };
 
-const handleMoveToWishlist = async (item) => {
+
+const handleWishlist = async (item) => {
+  const variantId = item?.variant_id;
+
+  if (!variantId) return;
+
   try {
-    // 1️⃣ Add to wishlist
-    const res = await fetch(`${BASE_URL}/api/v1/user/wishlist.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Auth-Token": localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        variant_id: item.variant_id,
-      }),
-    });
+    const res = await addToWishlist(variantId);
 
-    const data = await res.json();
+    if (res.success) {
+      // remove from cart
+      await deleteFromCart(item.product_id);
 
-    if (data.success) {
-      // 2️⃣ Remove from cart
-      await fetch(`${BASE_URL}/api/v1/cart.php`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Auth-Token": localStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          variant_id: item.variant_id,
-        }),
-      });
-
-      // 3️⃣ Update UI
       setCartItems((prev) =>
         prev.filter((i) => i.variant_id !== item.variant_id)
       );
 
-      // 🔥 Toast
-      toast.success("Moved to wishlist 💖", {
-        icon: "✨",
-      });
-
-      // 🔥 Update Topbar count
       window.dispatchEvent(new Event("wishlistUpdated"));
+
+      console.log("Moved to wishlist 💖");
     }
   } catch (err) {
     console.error(err);
-    toast.error("Failed to move item 😢");
   }
 };
 
@@ -115,91 +94,143 @@ const handleMoveToWishlist = async (item) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-6xl mx-auto px-6">
+<div className="min-h-screen bg-gradient-to-br from-[#e6f4ea] via-[#f0f6ff] to-[#f3e8ff] pt-10 pb-16 px-4">
+  <div className="max-w-7xl mx-auto">
 
-        {/* STEPPER */}
-        <div className="mb-10 flex justify-center">
-          <div className="flex items-center text-xs max-w-md w-full justify-between">
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-semibold">
-                1
-              </div>
-              <span className="font-semibold text-black">Cart</span>
-            </div>
+    {/* HEADER */}
+    <div className="mb-10 flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold">Your Cart 🛒</h1>
+        <p className="text-sm text-gray-500">
+          {cartItems.length} items saved for later
+        </p>
+      </div>
 
-            <div className="flex-1 h-px bg-gray-300 mx-2"></div>
+      <button className="text-sm text-gray-500 hover:text-black transition">
+        Continue Shopping →
+      </button>
+    </div>
 
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-semibold">
-                2
-              </div>
-              <span className="text-gray-500">Address</span>
-            </div>
+    {/* MAIN GRID */}
+    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
 
-            <div className="flex-1 h-px bg-gray-300 mx-2"></div>
+      {/* LEFT - PINTEREST STYLE */}
+      <div>
 
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-semibold">
-                3
-              </div>
-              <span className="text-gray-500">Payment</span>
-            </div>
+        {/* ACTION BAR */}
+        <div className="flex items-center gap-4 mb-6 px-4 py-3 rounded-full bg-white/70 backdrop-blur-xl shadow border border-white/40">
+          <input
+            type="checkbox"
+            className="w-4 h-4 accent-black cursor-pointer"
+          />
+
+          <span className="text-sm text-gray-600">
+            {selectedItems.length} selected
+          </span>
+
+          <div className="ml-auto flex gap-4 text-sm">
+            <button className="hover:text-blue-600 transition">
+              Move to wishlist
+            </button>
+            <button className="hover:text-red-500 transition">
+              Remove
+            </button>
           </div>
         </div>
 
-        {/* MAIN */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 items-start">
+        {/* PINTEREST GRID */}
+        <div className="grid sm:grid-cols-2 gap-5">
 
-          {/* LEFT */}
-          <div className="flex flex-col items-center">
+          {cartItems.map((item) => (
+            <div
+              key={item.variant_id}
+              className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-xl transition"
+            >
+              {/* IMAGE */}
+              <div className="relative overflow-hidden rounded-2xl bg-gray-100">
+                <img
+                  src={item.image}
+                  className="w-full h-[220px] object-cover group-hover:scale-105 transition"
+                />
 
-            {/* HEADER */}
-            <div className="w-full max-w-3xl mb-3 flex items-center gap-3">
-              <input
-                type="checkbox"
-                className="w-4 h-4 cursor-pointer accent-black"
-              />
+                {/* QUICK ACTIONS */}
+                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                  <button className="bg-white p-2 rounded-full shadow">
+                    ❤️
+                  </button>
+                  <button className="bg-white p-2 rounded-full shadow">
+                    🗑️
+                  </button>
+                </div>
+              </div>
 
-              <span className="text-xs text-gray-500 font-normal">
-                {selectedItems.length}/{cartItems.length} items selected
-              </span>
+              {/* INFO */}
+              <div className="mt-3">
+                <h3 className="text-sm font-semibold line-clamp-2">
+                  {item.name}
+                </h3>
 
-              <div className="ml-auto flex items-center gap-6 text-xs text-gray-500">
-                <button className="hover:text-black">Move to wishlist</button>
-                <button className="hover:text-black">Remove</button>
+                <p className="text-lg font-bold mt-1">
+                  ₹{item.price}
+                </p>
+
+                {/* QUANTITY */}
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1">
+                    <button
+                      onClick={() =>
+                        handleQuantityChange(item.product_id, item.quantity - 1)
+                      }
+                    >
+                      -
+                    </button>
+                    <span className="text-sm">{item.quantity}</span>
+                    <button
+                      onClick={() =>
+                        handleQuantityChange(item.product_id, item.quantity + 1)
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                   onClick={() => handleWishlist(item)}
+                    className="text-xs text-pink-500 hover:underline"
+                  >
+                    Move 💖
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* CART ITEMS */}
-            <div className="w-full max-w-3xl bg-white rounded-lg border border-gray-200 shadow-sm">
-              {cartItems.map((item) => (
-  <CartItem
-    key={item.variant_id}
-    id={item.variant_id} // ✅ ADD THIS (IMPORTANT)
-    image={item.image}
-    title={item.name}
-    price={item.price}
-    quantity={item.quantity}
-    onRefreshCart={fetchCart}
-    isSelected={selectedItems.includes(item.variant_id)}
-    onSelect={() => toggleSelect(item.variant_id)}
-
-  
-  />
-))}
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="space-y-4">
-            <CouponBox />
-            <Gifting />
-            <PriceDetails />
-          </div>
+          ))}
 
         </div>
       </div>
+
+      {/* RIGHT - CLEAN NIKE STYLE */}
+      <div className="sticky top-28 space-y-4">
+
+        <div className="bg-white/70 backdrop-blur-xl p-5 rounded-3xl shadow-lg">
+          <CouponBox />
+        </div>
+
+        <div className="bg-white/70 backdrop-blur-xl p-5 rounded-3xl shadow-lg">
+          <Gifting />
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl shadow-xl border">
+
+          <PriceDetails />
+
+          <button className="w-full mt-5 py-3 rounded-full bg-black text-white font-semibold hover:opacity-90 transition">
+            Checkout →
+          </button>
+        </div>
+
+      </div>
     </div>
+  </div>
+</div>
   )
 }

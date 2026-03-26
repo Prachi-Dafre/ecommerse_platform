@@ -2,77 +2,89 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../config";
 import toast from "react-hot-toast";
+import { addToCart } from "../services/cartService";
 export default function WishlistPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [quickViewItem, setQuickViewItem] = useState(null);
+const [selectedSize, setSelectedSize] = useState("M");
 
-const handleRemove = async (variantId) => {
+const handleRemove = async (wishlistId) => {
   try {
-    await fetch(`${BASE_URL}/api/v1/user/wishlist.php`, {
-      method: "POST", // ✅ FIXED
-      headers: {
-        "Content-Type": "application/json",
-        "X-Auth-Token": localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        action: "remove", // ✅ VERY IMPORTANT
-        variant_id: variantId,
-      }),
-    });
-
-    setItems((prev) =>
-      prev.filter((i) => i.variant_id !== variantId)
+    const res = await fetch(
+      `${BASE_URL}/api/v1/user/wishlist.php/${wishlistId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "X-Auth-Token": localStorage.getItem("token"),
+        },
+      }
     );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      toast.error("Failed to remove ❌");
+      return;
+    }
+
+    setItems((prev) => prev.filter((i) => i.id !== wishlistId));
 
     toast("Removed from wishlist 💔");
 
-    window.dispatchEvent(new Event("wishlistUpdated"));
   } catch (err) {
     console.error(err);
   }
 };
 
-    const handleMoveToCart = async (item) => {
+const handleMoveToCart = async (item) => {
   try {
-    // 1️⃣ Add to cart
-    await fetch(`${BASE_URL}/api/v1/user/cart.php/${item.variant_id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Auth-Token": localStorage.getItem("token"),
-      },
-      body: JSON.stringify({
-        variant_id: item.variant_id, // 🔥 IMPORTANT
-        quantity: 1,
-      }),
-    });
+    console.log("ITEM:", item);
 
-    // 2️⃣ Remove from wishlist
-  await fetch(`${BASE_URL}/api/v1/user/wishlist.php`, {
-  method: "DELETE",
-  headers: {
-    "Content-Type": "application/json",
-    "X-Auth-Token": localStorage.getItem("token"),
-  },
-  body: JSON.stringify({
-    variant_id: item.variant_id,
-  }),
-});
-
-    // 3️⃣ Update UI instantly
-    setItems((prev) =>
-      prev.filter((i) => i.variant_id !== item.variant_id)
+    // 1️⃣ Get variant from product API using slug
+    const productRes = await fetch(
+      `${BASE_URL}/api/v1/products.php/${item.slug}`
     );
 
-    // 4️⃣ Toast
+    const productData = await productRes.json();
+
+    const variantId = productData?.data?.variants?.[0]?.id;
+
+    console.log("VARIANT ID:", variantId);
+
+    if (!variantId) {
+      toast.error("Variant not found ❌");
+      return;
+    }
+
+    // 2️⃣ Add to cart
+    const cartRes = await addToCart(variantId, 1);
+
+    console.log("CART RESPONSE:", cartRes);
+
+    if (!cartRes?.success) {
+      toast.error(cartRes?.message || "Cart failed ❌");
+      return;
+    }
+
+    // 3️⃣ Remove from wishlist (USE wishlist ID ✅)
+    await fetch(`${BASE_URL}/api/v1/user/wishlist.php/${item.id}`, {
+      method: "DELETE",
+      headers: {
+        "X-Auth-Token": localStorage.getItem("token"),
+      },
+    });
+
+    // 4️⃣ Update UI
+    setItems((prev) => prev.filter((i) => i.id !== item.id));
+
     toast.success("Moved to cart 🛒✨");
 
-    // 5️⃣ Update topbar
     window.dispatchEvent(new Event("wishlistUpdated"));
 
   } catch (err) {
     console.error(err);
-    toast.error("Failed to move item 😢");
+    toast.error("Something went wrong 😢");
   }
 };
 
@@ -98,53 +110,112 @@ const handleRemove = async (variantId) => {
     fetchWishlist();
   }, []);
 
-  return (
-    <div className="bg-white min-h-screen px-8 py-10">
-      <h1 className="text-2xl font-semibold mb-10">My Wishlist 💖</h1>
+return (
+  <div className="min-h-screen bg-gradient-to-br from-[#eaf5ec] via-[#fdfbff] to-[#fdf2f8] px-6 md:px-12 py-12">
 
-      {items.length === 0 ? (
-        <p className="text-gray-500">Your wishlist is empty 😢</p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="border rounded-xl p-4 hover:shadow-lg transition cursor-pointer"
-              onClick={() => navigate(`/product/${item.slug}`)}
-            >
+    {/* HEADER */}
+    <div className="flex items-end justify-between mb-12">
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+          Wishlist 💖
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Your saved aesthetic fits
+        </p>
+      </div>
+
+      <span className="text-sm text-gray-600 bg-white/60 backdrop-blur px-4 py-1 rounded-full shadow-sm">
+        {items.length} Items
+      </span>
+    </div>
+
+    {items.length === 0 ? (
+      <div className="flex flex-col items-center justify-center mt-24 text-gray-500">
+        <p className="text-lg">Nothing saved yet</p>
+        <p className="text-sm text-gray-400 mt-1">
+          Start adding styles you love
+        </p>
+      </div>
+    ) : (
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+
+        {items.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => navigate(`/product/${item.slug}`)}
+            className="group cursor-pointer"
+          >
+
+            {/* IMAGE CARD */}
+            <div className="relative overflow-hidden rounded-3xl bg-white/60 backdrop-blur-xl shadow-md hover:shadow-2xl transition duration-500">
+
               <img
                 src={item.image || "/placeholder.png"}
-                className="h-40 w-full object-cover rounded-lg mb-3"
+                className="w-full h-[300px] object-cover transition duration-700 group-hover:scale-110"
               />
 
-              <h3 className="font-semibold">{item.name}</h3>
+              {/* GRADIENT OVERLAY */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
 
-              <p className="text-blue-600 font-bold">
-                ₹{item.price}
-              </p>
-
+              {/* REMOVE BUTTON */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleRemove(item.variant_id);
+                  handleRemove(item.id);
                 }}
-                className="text-red-500 text-sm mt-2"
+                className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow hover:bg-red-50 transition"
               >
-                Remove ❌
+                ❤️
               </button>
-              <button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleMoveToCart(item);
-  }}
-  className="mt-2 text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition"
->
-  Move to Cart 🛒
-</button>
+
+              {/* FLOATING CTA */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[85%] opacity-0 group-hover:opacity-100 translate-y-6 group-hover:translate-y-0 transition duration-500">
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMoveToCart(item);
+                  }}
+                  className="w-full py-2.5 text-sm font-semibold rounded-full 
+                  bg-gradient-to-r from-black to-gray-800 text-white 
+                  shadow-lg hover:scale-105 transition"
+                >
+                  Move to Bag 🛒
+                </button>
+
+              </div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+
+            {/* DETAILS */}
+            <div className="mt-4 space-y-1 px-1">
+
+              <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">
+                {item.name}
+              </h3>
+
+              <div className="flex items-center gap-2 text-sm">
+
+                <span className="font-bold text-gray-900">
+                  ₹{item.price}
+                </span>
+
+                <span className="text-gray-400 line-through text-xs">
+                  ₹{Math.round(item.price * 1.4)}
+                </span>
+
+                <span className="text-green-600 text-xs font-semibold">
+                  28% off
+                </span>
+
+              </div>
+
+            </div>
+          </div>
+        ))}
+
+      </div>
+    )}
+  </div>
+);
 }

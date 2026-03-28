@@ -99,7 +99,7 @@ const ExplorePage = () => {
   }, []);
 
   return (
-    <div className="bg-white p-3 max-w-[1600px] mx-auto">
+    <div className="bg-white p-5 max-w-[1600px] mx-auto">
       {/* ================= HEADER ================= */}
       
       <div className="relative flex items-center justify-between pb-8">

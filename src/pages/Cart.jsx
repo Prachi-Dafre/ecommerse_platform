@@ -1,89 +1,18 @@
-import { useState,useEffect } from "react"
-import { addToWishlist } from "../services/wishlistService"; 
+import { useState } from "react"
 import CartItem from "../components/cart/CartItem"
 import CouponBox from "../components/cart/CouponBox"
 import Gifting from "../components/cart/Gifting"
 import PriceDetails from "../components/cart/PriceDetails"
-import { getCart, updateCart, deleteFromCart } from "../services/cartService";
-import { BASE_URL } from "../config";
+
 export default function Cart() {
- const [cartItems, setCartItems] = useState([]);
-const [loading, setLoading] = useState(true);
+  const cartItems = [
+    { id: 1, image: "/toy.png", title: "Cute worm baby toys", price: 45.20 },
+    { id: 2, image: "/toy1.png", title: "Cute crab baby toys", price: 45.20 },
+    { id: 3, image: "/toy2.png", title: "Plush toys for babies", price: 45.20 },
+    { id: 4, image: "/toy3.png", title: "Cute snail baby toys", price: 16.20 },
+  ]
+
   const [selectedItems, setSelectedItems] = useState([])
-
-  const fetchCart = async () => {
-    try {
-      const data = await getCart(); // ✅ use service
-
-      console.log("FULL CART DATA:", data);
-
-      if (data.success) {
-      setCartItems(data.items || []);
-      } else {
-        console.error("Cart error:", data.message);
-      }
-    } catch (err) {
-      console.error("Cart fetch error:", err);
-    }
-  };
-useEffect(() => {
-  fetchCart();
-}, []);
-
-const handleDelete = async (productId) => {
-  try {
-    await deleteFromCart(productId);
-
-    // refresh cart
-    setCartItems((prev) =>
-      prev.filter((item) => item.product_id !== productId)
-    );
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-const handleQuantityChange = async (productId, newQty) => {
-  try {
-    await updateCart(productId, newQty);
-
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.product_id === productId
-          ? { ...item, quantity: newQty }
-          : item
-      )
-    );
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-
-const handleWishlist = async (item) => {
-  const variantId = item?.variant_id;
-
-  if (!variantId) return;
-
-  try {
-    const res = await addToWishlist(variantId);
-
-    if (res.success) {
-      // remove from cart
-      await deleteFromCart(item.product_id);
-
-      setCartItems((prev) =>
-        prev.filter((i) => i.variant_id !== item.variant_id)
-      );
-
-      window.dispatchEvent(new Event("wishlistUpdated"));
-
-      console.log("Moved to wishlist 💖");
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
 
   const toggleSelect = (id) => {
     setSelectedItems((prev) =>
@@ -94,143 +23,84 @@ const handleWishlist = async (item) => {
   }
 
   return (
-<div className="min-h-screen bg-gradient-to-br from-[#e6f4ea] via-[#f0f6ff] to-[#f3e8ff] pt-10 pb-16 px-4">
-  <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-6">
+      <div className="max-w-6xl mx-auto px-6">
 
-    {/* HEADER */}
-    <div className="mb-10 flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold">Your Cart 🛒</h1>
-        <p className="text-sm text-gray-500">
-          {cartItems.length} items saved for later
-        </p>
-      </div>
+        {/* STEPPER */}
+        <div className="mb-10 flex justify-center">
+          <div className="flex items-center text-xs max-w-md w-full justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-semibold">
+                1
+              </div>
+              <span className="font-semibold text-black">Cart</span>
+            </div>
 
-      <button className="text-sm text-gray-500 hover:text-black transition">
-        Continue Shopping →
-      </button>
-    </div>
+            <div className="flex-1 h-px bg-gray-300 mx-2"></div>
 
-    {/* MAIN GRID */}
-    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-semibold">
+                2
+              </div>
+              <span className="text-gray-500">Address</span>
+            </div>
 
-      {/* LEFT - PINTEREST STYLE */}
-      <div>
+            <div className="flex-1 h-px bg-gray-300 mx-2"></div>
 
-        {/* ACTION BAR */}
-        <div className="flex items-center gap-4 mb-6 px-4 py-3 rounded-full bg-white/70 backdrop-blur-xl shadow border border-white/40">
-          <input
-            type="checkbox"
-            className="w-4 h-4 accent-black cursor-pointer"
-          />
-
-          <span className="text-sm text-gray-600">
-            {selectedItems.length} selected
-          </span>
-
-          <div className="ml-auto flex gap-4 text-sm">
-            <button className="hover:text-blue-600 transition">
-              Move to wishlist
-            </button>
-            <button className="hover:text-red-500 transition">
-              Remove
-            </button>
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-semibold">
+                3
+              </div>
+              <span className="text-gray-500">Payment</span>
+            </div>
           </div>
         </div>
 
-        {/* PINTEREST GRID */}
-        <div className="grid sm:grid-cols-2 gap-5">
+        {/* MAIN */}
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 items-start">
 
-          {cartItems.map((item) => (
-            <div
-              key={item.variant_id}
-              className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-xl transition"
-            >
-              {/* IMAGE */}
-              <div className="relative overflow-hidden rounded-2xl bg-gray-100">
-                <img
-                  src={item.image}
-                  className="w-full h-[220px] object-cover group-hover:scale-105 transition"
-                />
+          {/* LEFT */}
+          <div className="flex flex-col items-center">
 
-                {/* QUICK ACTIONS */}
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                  <button className="bg-white p-2 rounded-full shadow">
-                    ❤️
-                  </button>
-                  <button className="bg-white p-2 rounded-full shadow">
-                    🗑️
-                  </button>
-                </div>
-              </div>
+            {/* HEADER */}
+            <div className="w-full max-w-3xl mb-3 flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="w-4 h-4 cursor-pointer accent-black"
+              />
 
-              {/* INFO */}
-              <div className="mt-3">
-                <h3 className="text-sm font-semibold line-clamp-2">
-                  {item.name}
-                </h3>
+              <span className="text-xs text-gray-500 font-normal">
+                {selectedItems.length}/{cartItems.length} items selected
+              </span>
 
-                <p className="text-lg font-bold mt-1">
-                  ₹{item.price}
-                </p>
-
-                {/* QUANTITY */}
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1">
-                    <button
-                      onClick={() =>
-                        handleQuantityChange(item.product_id, item.quantity - 1)
-                      }
-                    >
-                      -
-                    </button>
-                    <span className="text-sm">{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        handleQuantityChange(item.product_id, item.quantity + 1)
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <button
-                   onClick={() => handleWishlist(item)}
-                    className="text-xs text-pink-500 hover:underline"
-                  >
-                    Move 💖
-                  </button>
-                </div>
+              <div className="ml-auto flex items-center gap-6 text-xs text-gray-500">
+                <button className="hover:text-black">Move to wishlist</button>
+                <button className="hover:text-black">Remove</button>
               </div>
             </div>
-          ))}
+
+            {/* CART ITEMS */}
+            <div className="w-full max-w-3xl bg-white rounded-lg border border-gray-200 shadow-sm">
+              {cartItems.map((item) => (
+                <CartItem
+                  key={item.id}
+                  {...item}
+                  isSelected={selectedItems.includes(item.id)}
+                  onSelect={() => toggleSelect(item.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="space-y-4">
+            <CouponBox />
+            <Gifting />
+            <PriceDetails />
+          </div>
 
         </div>
-      </div>
-
-      {/* RIGHT - CLEAN NIKE STYLE */}
-      <div className="sticky top-28 space-y-4">
-
-        <div className="bg-white/70 backdrop-blur-xl p-5 rounded-3xl shadow-lg">
-          <CouponBox />
-        </div>
-
-        <div className="bg-white/70 backdrop-blur-xl p-5 rounded-3xl shadow-lg">
-          <Gifting />
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl shadow-xl border">
-
-          <PriceDetails />
-
-          <button className="w-full mt-5 py-3 rounded-full bg-black text-white font-semibold hover:opacity-90 transition">
-            Checkout →
-          </button>
-        </div>
-
       </div>
     </div>
-  </div>
-</div>
   )
 }

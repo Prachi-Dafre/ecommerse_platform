@@ -1,1 +1,0 @@
-export const BASE_URL = "https://fannest1.co.in/driftgear";

@@ -3,9 +3,10 @@ import ContactPage from "./pages/ContactPage";
 import Sidebar from "./components/HomeNav/Sidebar"
 import Topbar from "./components/HomeNav/Topbar"
 import WishlistPage from "./pages/WishlistPage"
-import ListPage from "./pages/ListPage";
-import { Toaster } from "react-hot-toast";
-import HomePage from "./HomePage";
+import CreateListPage from "./pages/CreateListPage"
+import ListPage from "./pages/ListPage"
+
+
 
 import ExplorePage from "./components/Explore/ExplorePage"
 import SearchPage from "./components/SearchPage/SearchPage"
@@ -18,7 +19,7 @@ import Orders from "./pages/Orders"
 import OrderDetails from "./pages/OrderDetails"
 import ProfilePage from "./pages/ProfilePage"
 import ProfileSetting from "./pages/ProfileSetting"
-import CreateListPage from "./pages/createList";
+
 
 /* ✅ NEW SUPPORT PAGES */
 import OrdersSupport from "./pages/OrdersSupport"
@@ -41,23 +42,19 @@ function AppContent() {
 
       {/* Main Content */}
       <div className="flex flex-col flex-1">
-         <Toaster position="top-right" reverseOrder={false} />
         <Topbar />
         <div className="flex-1 overflow-y-auto bg-gray-50 pt-20">
 
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           <Routes>
             
             {/* Main Pages */}
-             <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/top-products" element={<TopProducts/>}/>
+            <Route path="/" element={<ExplorePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/address" element={<Address />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/category/:category" element={<SearchPage />} />
-             <Route path="/create-list" element={<CreateListPage />} />
-             <Route path="/list/:name" element={<ListPage />} />
             // Product Details
             
         <Route path="/product/:slug" element={<ProductDetails />} />
@@ -79,7 +76,7 @@ function AppContent() {
 <Route path="/help-support" element={<HelpSupport />} />
 
 {/* Support Topic Pages */}
-<Route path="/orders-support" element={<OrdersSupport />} />
+<Route path="/orders" element={<OrdersSupport />} />
 <Route path="/returns" element={<ReturnsSupport />} />
 <Route path="/payments" element={<PaymentsSupport />} />
 <Route path="/account" element={<AccountSupport />} />
@@ -97,6 +94,7 @@ function AppContent() {
           </div>
         </div>
       </div>
+    </div>
   )
 }
 

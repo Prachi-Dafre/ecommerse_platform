@@ -1,28 +1,72 @@
 import React from "react";
 
-function FilterPill({ label, value, width = "w-[60px]" }) {
+function FilterPill({
+  label,
+  value,
+  options = [],
+  onChange,
+  width = "w-[130px]",
+}) {
   return (
     <div
-      className={`h-14 ${width} flex items-center border border-gray-300 rounded-full bg-white overflow-hidden pl-6 text-sm`}
+      className={`
+        ${width}
+        flex items-center justify-between
+        px-4 py-2.5
+        rounded-full
+        bg-white/80 backdrop-blur-md
+        border border-white/40
+        shadow-sm
+        hover:shadow-md
+        transition-all duration-200
+        group
+      `}
     >
-      <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="font-bold">{value}</p>
+      {/* TEXT */}
+      <div className="flex flex-col leading-tight">
+        <span className="text-[8px] text-gray-400 uppercase tracking-wide">
+          {label}
+        </span>
+        <span className="text-sm font-semibold text-gray-800 truncate">
+          {value}
+        </span>
       </div>
 
-      <div className="h-8 w-8 ml-4 rounded-full border border-gray-200 flex items-center justify-center">
+      {/* SELECT */}
+      <div className="relative">
         <select
-          className="h-full w-full rounded-full appearance-none bg-transparent cursor-pointer"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='gray' stroke-width='1.5'%3E%3Cpath d='M5 7l5 6 5-6'/%3E%3C/svg%3E\")",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            backgroundSize: "14px",
-          }}
+          onChange={(e) => onChange && onChange(e.target.value)}
+          className="
+            absolute inset-0 opacity-0 cursor-pointer
+          "
         >
-          <option></option>
+          {options.map((opt, i) => (
+            <option key={i} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
+
+        {/* ICON BUTTON */}
+        <div
+          className="
+            w-8 h-4
+            flex items-center justify-center
+            rounded-full
+            bg-gray-100 group-hover:bg-gray-200
+            transition
+          "
+        >
+          <svg
+            className="w-4 h-4 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
       </div>
     </div>
   );

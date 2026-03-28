@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Eye, X } from "lucide-react";
-
+import { BASE_URL } from "../config";
 function Register({ onClose, onSwitch }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -12,7 +12,7 @@ function Register({ onClose, onSwitch }) {
 
     try {
       const res = await fetch(
-        "https://fannest1.co.in/driftgear/api/v1/auth/register.php",
+        `${BASE_URL}/api/v1/auth/register.php`,
         {
           method: "POST",
           headers: {
@@ -26,9 +26,12 @@ function Register({ onClose, onSwitch }) {
         }
       );
 
-      const data = await res.json();
+    const text = await res.text();
+console.log("RAW RESPONSE:", text);
 
-      if (data.status) {
+const data = text ? JSON.parse(text) : {};
+
+      if (data.success || data.status) {
         alert("Registration successful! Please login.");
         onSwitch(); // Automatically switch to login page
       } else {

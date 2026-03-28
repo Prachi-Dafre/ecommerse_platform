@@ -1,15 +1,17 @@
+// UPDATED ExplorePage (Gen Z + Image-based cards + fixed layout + navigation hints)
 import React, { useState, useEffect, useCallback } from "react";
 import { LayoutGrid, UserRound } from "lucide-react";
 import PromoCard from "./PromoCard";
 import { CategoryCard, ShowMoreCard } from "./CategoryCards";
 import TopProducts from "./TopProducts";
 import CategoryModal from "./CategoryModal";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ExplorePage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const [showCategories, setShowCategories] = useState(false);
 
-  // ---------------- STATE ----------------
   const [page, setPage] = useState(1);
   const [topProducts, setTopProducts] = useState([]);
   const [banners, setBanners] = useState([]);
@@ -18,20 +20,35 @@ const ExplorePage = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // ---------------- FETCH HOME DATA ----------------
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const style = params.get("style");
+
+    let genderFilter = "all";
+    if (style === "genz") genderFilter = "men";
+    if (style === "vintage") genderFilter = "women";
+
+    fetchHomeData(1, genderFilter);
+  }, [location.search]);
+
   const fetchHomeData = async (pageNum, genderFilter) => {
     if (loading) return;
-
-    console.log(
-      `API CALL → page=${pageNum}, gender=${genderFilter}`
-    );
-
     setLoading(true);
+
     try {
       const res = await fetch(
         `https://fannest1.co.in/driftgear/api/v1/home.php?page=${pageNum}&gender=${genderFilter}`
       );
-      const data = await res.json();
+
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        return;
+      }
 
       if (data.success) {
         const fetchedProducts = data.response.data.top_products || [];
@@ -39,37 +56,31 @@ const ExplorePage = () => {
         const fetchedCategories = data.response.data.categories || [];
 
         if (pageNum === 1) {
-          // RESET DATA
           setTopProducts(fetchedProducts);
           setBanners(fetchedBanners);
           setCategories(fetchedCategories);
         } else {
-          // PAGINATION
           setTopProducts((prev) => [...prev, ...fetchedProducts]);
         }
 
         setHasMore(fetchedProducts.length > 0);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error(error);
     }
+
     setLoading(false);
   };
 
-  // ---------------- GENDER CLICK ----------------
   const handleGenderClick = (tab) => {
     const genderFilter = tab.toLowerCase();
-
     setActiveTab(tab);
     setGender(genderFilter);
     setPage(1);
     setHasMore(true);
-
-    // 🔥 IMPORTANT: call API directly
     fetchHomeData(1, genderFilter);
   };
 
-  // ---------------- INFINITE SCROLL ----------------
   const handleScroll = useCallback(() => {
     if (
       window.innerHeight + document.documentElement.scrollTop + 100 >=
@@ -86,14 +97,12 @@ const ExplorePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-  // ---------------- PAGINATION FETCH ----------------
   useEffect(() => {
     if (page > 1) {
       fetchHomeData(page, gender);
     }
   }, [page]);
 
-  // ---------------- INITIAL LOAD ----------------
   useEffect(() => {
     fetchHomeData(1, "all");
   }, []);
@@ -139,54 +148,75 @@ const ExplorePage = () => {
             Filters
           </button>
         </div>
-
-        <div className="mt-6 h-px bg-gray-200 w-full" />
       </div>
 
-      {/* ================= PROMO + CATEGORY GRID ================= */}
-      <section className="mb-14 overflow-x-auto">
-        <div className="grid grid-cols-12 gap-6 min-w-[1200px] items-stretch">
-          {banners[0] && (
-            <div className="col-span-6">
-              <PromoCard banner={banners[0]} />
-            </div>
-          )}
+      {/* PROMO GRID (UPDATED WITH IMAGES) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 auto-rows-[180px]">
 
-          {categories.slice(0, 3).map((cat) => (
-            <div key={cat.id} className="col-span-2">
-              <CategoryCard cat={cat} />
-            </div>
-          ))}
-
-          {banners[1] && (
-            <div className="col-span-6">
-              <PromoCard banner={banners[1]} />
-            </div>
-          )}
-
-          {categories.slice(3, 5).map((cat) => (
-            <div key={cat.id} className="col-span-2">
-              <CategoryCard cat={cat} />
-            </div>
-          ))}
-
-          <div className="col-span-2">
-            <ShowMoreCard onClick={() => setShowCategories(true)} />
+        {/* SALE */}
+        <div
+          onClick={() => navigate("/sale")}
+          className="col-span-2 rounded-3xl overflow-hidden relative cursor-pointer group"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1600180758890-6b94519a8ba6"
+            className="w-full h-full object-cover group-hover:scale-105 transition"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute bottom-4 left-4 text-white">
+            <h2 className="font-bold text-lg">Get up to 50% OFF</h2>
           </div>
         </div>
-      </section>
 
-      {/* ================= TOP PRODUCTS ================= */}
+        {/* WINTER */}
+        <div
+          onClick={() => navigate("/winter")}
+          className="col-span-2 rounded-3xl overflow-hidden relative cursor-pointer"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1603252109303-2751441dd157"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute bottom-4 left-4 text-white">
+            Winter’s Weekend
+          </div>
+        </div>
+
+        {/* BOLD */}
+        <div
+          onClick={() => navigate("/bold-fashion")}
+          className="col-span-2 rounded-3xl overflow-hidden relative cursor-pointer"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1544441893-675973e31985"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute bottom-4 left-4 text-white">
+            Bring Bold Fashion
+          </div>
+        </div>
+
+        {/* CATEGORIES (clean) */}
+        {categories.slice(0, 2).map((cat) => (
+          <div key={cat.id} onClick={() => navigate(`/category/${cat.slug}`)}>
+            <CategoryCard cat={cat} />
+          </div>
+        ))}
+
+        <ShowMoreCard onClick={() => setShowCategories(true)} />
+      </div>
+
+      {/* PRODUCTS */}
       <TopProducts products={topProducts} />
 
       {loading && (
-        <p className="text-center mt-6">Loading...</p>
+        <p className="text-center mt-6 text-gray-500">Loading...</p>
       )}
 
       {!hasMore && (
-        <p className="text-center mt-6">
-          No more products
-        </p>
+        <p className="text-center mt-6 text-gray-400">End reached</p>
       )}
 
       {showCategories && (

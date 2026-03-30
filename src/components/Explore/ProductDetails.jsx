@@ -1,18 +1,13 @@
-import React, { useEffect, useState , useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Star, ThumbsUp, Heart, Share2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { addToCart } from "../../services/cartService";
-import { addToWishlist, removeFromWishlist } from "../../services/wishlistService";
-import toast from "react-hot-toast";
-import { BASE_URL } from "../../config";
+
 const ProductDetails = () => {
   const location = useLocation();
-  const actionRef = useRef(null);
 const passedProduct = location.state?.product;
 const [liked,setLiked] = useState(false);
   const { slug } = useParams();
-  const [showStickyBar, setShowStickyBar] = useState(false);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
@@ -21,91 +16,18 @@ const [liked,setLiked] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(2);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [outfit, setOutfit] = useState(null);
-const [loadingAI, setLoadingAI] = useState(false);
-const generateOutfit = async () => {
-  setLoadingAI(true);
 
-  try {
-    const res = await fetch(`${BASE_URL}/api/v1/products.php`);
-    const data = await res.json();
-
-    const allProducts = data?.data || [];
-
-    console.log("PRODUCTS:", allProducts);
-
-    // safer matching
-    const findItem = (keyword) =>
-      allProducts.find(p =>
-        p?.name?.toLowerCase().includes(keyword)
-      );
-
-    let jeans = findItem("jeans");
-    let shoes = findItem("shoe") || findItem("sneaker");
-    let hoodie = findItem("hoodie");
-
-    // ✅ FALLBACKS (IMPORTANT)
-    jeans = jeans || {
-      name: "Classic Blue Jeans",
-      image: "https://via.placeholder.com/100"
-    };
-
-    shoes = shoes || {
-      name: "White Sneakers",
-      image: "https://via.placeholder.com/100"
-    };
-
-    hoodie = hoodie || {
-      name: "Black Hoodie",
-      image: "https://via.placeholder.com/100"
-    };
-
-    setOutfit({
-      items: [
-        { label: "Top", data: hoodie },
-        { label: "Bottom", data: jeans },
-        { label: "Shoes", data: shoes }
-      ]
-    });
-
-  } catch (err) {
-    console.error(err);
-  }
-
-  setLoadingAI(false);
-};
-
-useEffect(() => {
-  if (!actionRef.current) return;
-
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      console.log("VISIBLE:", entry.isIntersecting);
-      setShowStickyBar(!entry.isIntersecting);
-    },
-    {
-      threshold: 0,
-    }
-  );
-
-  observer.observe(actionRef.current);
-
-  return () => {
-    observer.disconnect();
-  };
-}, [product]); // 👈 IMPORTANT
   // API 1: Fetch Product Details
   useEffect(() => {
     const fetchProduct = async () => {
       
       try {
-        const res = await fetch(`${BASE_URL}/api/v1/products.php/${slug}`)
-       const text = await res.text();
-console.log(product);
-console.log(product?.variants);
-const data = text ? JSON.parse(text) : {};
+        const res = await fetch(
+          `https://fannest1.co.in/driftgear/api/v1/products.php/${slug}`
+        );
+        const data = await res.json();
         console.log(data);
         console.log(data.data);
 
@@ -127,35 +49,6 @@ const data = text ? JSON.parse(text) : {};
     fetchProduct();
   }, [slug]);
 
-useEffect(() => {
-  const checkWishlist = async () => {
-    try {
-      const res = await fetch(
-        `${BASE_URL}/api/v1/user/wishlist.php`,
-        {
-          headers: {
-            "X-Auth-Token": localStorage.getItem("token"),
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (data.data) {
-       const variantId = product?.variants?.[0]?.id;
-        const exists = data.data.some(
-          (item) => item.variant_id === variantId
-        );
-        setLiked(exists);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (product?.id) checkWishlist();
-}, [product?.id]);
-
   // API 2: Fetch Reviews - Use product.id instead of slug
   useEffect(() => {
     
@@ -171,18 +64,15 @@ useEffect(() => {
     if (!product || !product.id) {
       return;
     }
-const variantId = product?.variants?.[0]?.id;
+
     setReviewsLoading(true);
     try {
       // ✅ USE PRODUCT ID, NOT SLUG
-      const url = `${BASE_URL}/api/v1/products.php?variant_id=${variantId}`;
+      const url = `https://fannest1.co.in/driftgear/api/v1/products.php/${product.id}/reviews`;
       
       const res = await fetch(url);  
       
-const text = await res.text();
-
-
-const data = text ? JSON.parse(text) : {};
+      const data = await res.json();
 
       if (data && data.success && data.data) {
         setReviews(data.data);  
@@ -220,7 +110,7 @@ const data = text ? JSON.parse(text) : {};
 
       // ✅ USE PRODUCT ID, NOT SLUG
       const res = await fetch(
-        `${BASE_URL}/api/v1/products.php/${product.id}/reviews`,
+        `https://fannest1.co.in/driftgear/api/v1/products.php/${product.id}/reviews`,
         {
           method: "POST",
           headers: {
@@ -229,10 +119,7 @@ const data = text ? JSON.parse(text) : {};
           body: JSON.stringify(requestBody),
         }
       );
-     const text = await res.text();
-
-
-const data = text ? JSON.parse(text) : {};
+      const data = await res.json();
 
       if (data && data.success) {
         alert("✅ Review submitted successfully!");
@@ -248,59 +135,6 @@ const data = text ? JSON.parse(text) : {};
       setSubmitLoading(false);
     }
   };
-const handleAddToCart = async () => {
-  try {
-    const variantId = product?.variants?.[0]?.id;
-
-    if (!variantId) {
-      alert("Variant not found");
-      return;
-    }
-
-    const res = await addToCart(variantId, quantity);
-    console.log("Cart:", res);
-toast.success("Item added to cart!");
-  } catch (err) {
-    console.error("Add to cart failed:", err);
-    toast.error("Failed to add item to cart.");
-  }
-};
-
-
-const handleWishlist = async (e) => {
-  e.stopPropagation();
-
-  if (!product || !product.id) return;
- const variantId = product?.variants?.[0]?.id;
-
-  try {
-    if (liked) {
-      const res = await removeFromWishlist(variantId);
-      console.log("REMOVE RES:", res);
-
-      if (res.success) {
-        setLiked(false);
-        toast("Removed from wishlist 💔");
-      } else {
-        toast.error("Remove failed ❌");
-      }
-    } else {
-      const res = await addToWishlist(variantId);
-      console.log("ADD RES:", res); // 👈 VERY IMPORTANT
-
-      if (res.success) {
-        window.dispatchEvent(new Event("wishlistUpdated"));
-        setLiked(true);
-        toast.success("Wishlisted! You’ve got great taste 😍");
-      } else {
-        toast.error("Add failed ❌");
-      } 
-    }
-  } catch (err) {
-    console.error(err);
-    toast.error("Something went wrong 😢");
-  }
-};
 
   const calculateAverageRating = () => {
     if (reviews.length === 0) return 0;
@@ -357,11 +191,7 @@ const handleWishlist = async (e) => {
   const totalReviews = reviews.length;
 
   // ✅ FIXED: Proper image URLs
-  const productImages = [
-  passedProduct?.image ||
-  product?.image ||
-  "https://via.placeholder.com/500"
-];
+  const productImages = [];
 
 if (passedProduct?.image) {
   productImages.push(passedProduct.image);
@@ -377,7 +207,7 @@ if (originalPrice && salePrice) {
   );
 }
   return (
-    <div  className="min-h-screen bg-gradient-to-br from-[#eef2f7] via-[#f6f9fc] to-[#eef1f6] pb-28">
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2f7] via-[#f6f9fc] to-[#eef1f6] pb-28">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Product Details</h2>
@@ -387,11 +217,11 @@ if (originalPrice && salePrice) {
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Main Product Section */}
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white/60 backdrop-blur-2xl rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-12 mb-12 border border-white/40">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-white/80 backdrop-blur-xl rounded-3xl shadow-md p-10 mb-10 border border-gray-100">
           {/* Left: Images */}
           <div className="flex gap-4">
             <div className="flex flex-col gap-3">
-              {productImages.filter(Boolean).map((img, index) => (
+              {productImages.map((img, index) => (
                 <div
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -410,41 +240,36 @@ if (originalPrice && salePrice) {
               ))}
             </div>
 
-          <div className="flex-1 rounded-[32px] overflow-hidden 
-bg-gradient-to-br from-[#f3f4ff] via-[#fdf2ff] to-[#fff7ed]
-relative group shadow-inner">
-<img
-  src={productImages[selectedImage] || productImages[0]}
-  onError={(e) => {
-    e.target.src = "https://via.placeholder.com/500";
-  }}
-  className="w-full h-[520px] object-cover"
-/>
+            <div className="flex-1 rounded-3xl overflow-hidden bg-gray-100 flex items-center justify-center shadow-inner">
+              <div className="overflow-hidden w-full h-[500px] group">
+              <img
+               src={productImages[selectedImage]} alt={product?.name} className="w-full h-[500px] object-cover transition-transform duration-500 hover:scale-105"/>
+            </div>
+              </div>
+          </div>
 
-  {/* soft overlay */}
-  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
-</div>
-      </div>
           {/* Right: Product Info */}
           <div className="flex flex-col">
-           <div className="inline-block px-3 py-1 rounded-full 
-       bg-emerald-100 text-emerald-600 text-xs font-semibold mb-3">
-       {product.brand_name || "GenZ Brand"}
-       </div>
+            <div className="text-sm text-gray-400 uppercase tracking-wide mb-2">
+              {product.brand_name || "Jack& Jones"}
+            </div>
             <div className="flex items-start justify-between mb-4">
-       <h2 className="text-3xl font-semibold tracking-tight text-gray-900 leading-snug">
-        {product.name}
-       </h2>
+  <h2 className="text-2xl font-bold text-gray-900">
+    {product.name}
+  </h2>
 
-     <div className="flex gap-3 ">
+  <div className="flex gap-3">
     {/* Wishlist */}
     <button
-    onClick={handleWishlist}
-   className={`p-2 rounded-full transition ${
-   liked
-    ? "bg-red-100 text-red-500"
-    : "bg-gray-100 hover:bg-red-100 hover:text-red-500"
-}`}
+  onClick={(e) => {
+    e.stopPropagation();
+    setLiked(!liked);
+  }}
+  className={`p-2 rounded-full transition ${
+    liked
+      ? "bg-red-100 text-red-500"
+      : "bg-gray-100 hover:bg-red-100 hover:text-red-500"
+  }`}
 >
   <Heart size={20} fill={liked ? "currentColor" : "none"} />
 </button>
@@ -481,33 +306,22 @@ relative group shadow-inner">
             <div className="flex flex-col gap-1 mb-6">
 
   {/* Discounted Price */}
-  
+  <span className="text-3xl font-bold text-gray-900">
+    ₹{salePrice}
+  </span>
 
   {/* Original Price + Discount */}
-  <div className="flex items-center justify-between mb-8">
+  <div className="flex items-center gap-3 text-sm">
 
-  <div className="flex flex-col">
-    <span className="text-3xl font-semibold text-gray-900">
-      ₹{salePrice}
+    <span className="text-green-600 font-semibold">
+      {discountPercent}% off
     </span>
 
-    <div className="flex items-center gap-3 text-sm mt-1">
-      <span className="text-gray-400 line-through">
-        ₹{originalPrice}
-      </span>
+    <span className="text-gray-400 line-through">
+      ₹{originalPrice}
+    </span>
 
-      <div className="absolute top-4 left-4 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold shadow">
-  {discountPercent}% OFF
-</div>
-    </div>
   </div>
-
-  <div className="flex items-center gap-2 bg-white/70 backdrop-blur px-3 py-1.5 rounded-full shadow-sm">
-    <Star size={14} fill="#111" stroke="#111" />
-    <span className="text-sm font-medium">{averageRating}</span>
-  </div>
-
-</div>
 
 </div>
 
@@ -521,25 +335,18 @@ relative group shadow-inner">
               <label className="text-sm font-semibold text-gray-700 mb-2 block flex-shrink-0 mt-1 mr-4">
                 Select size :
               </label>
-             <div className="mb-8">
-  <p className="text-sm font-medium text-gray-700 mb-3">Select Size</p>
-
-  <div className="flex gap-3">
-    {["S","M","L","XL","XXL"].map(size => (
-      <button
-        key={size}
-        onClick={() => setSelectedSize(size)}
-        className={`w-12 h-12 rounded-full border text-sm font-medium transition
-          ${selectedSize === size
-            ? "bg-black text-white border-black"
-            : "bg-white border-gray-300 hover:border-black"}
-        `}
-      >
-        {size}
-      </button>
-    ))}
-  </div>
-</div>
+              <select
+                value={selectedSize}
+                onChange={(e) => setSelectedSize(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+              >
+                <option value="">Choose you size</option>
+                <option value="S">Small (S)</option>
+                <option value="M">Medium (M)</option>
+                <option value="L">Large (L)</option>
+                <option value="XL">Extra Large (XL)</option>
+                <option value="XXL">XXL</option>
+              </select>
             </div>
 
             <div className="mb-6 flex items-center gap-6">
@@ -549,7 +356,7 @@ relative group shadow-inner">
               <select
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="px-4 py-2 rounded-full bg-white/70 backdrop-blur border border-gray-200 text-sm shadow-sm">
+                className="px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-blue-500">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <option key={num} value={num}>
                     {num}
@@ -580,81 +387,20 @@ relative group shadow-inner">
               </div>
             </div>
 
-            <div ref={actionRef} className="flex gap-4 mt-6 items-center">
-            <button className="flex-1 py-3 rounded-full 
-bg-gradient-to-r from-emerald-500 to-cyan-400 
-text-white font-semibold shadow-lg hover:scale-105 transition">
+            <div className="flex gap-4 mt-6">
+             <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md hover:shadow-lg">
               Buy Now
-            </button>
-            <button
-  onClick={generateOutfit}
-  className="flex-1 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400 text-white font-semibold"
->
-  {loadingAI ? "Generating..." : "✨ Generate Outfit"}
-</button>
-             <button
-             onClick={handleAddToCart}
-             className="flex-1 py-3 rounded-full 
-bg-gradient-to-r from-emerald-500 to-cyan-400 
-text-white font-semibold shadow-lg hover:scale-105 transition"
-             >
-            Add to Bag
-            </button>
+             </button>
+
+             <button className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 font-semibold py-3 rounded-xl transition-all shadow-sm">
+              Add to Basket
+             </button>
             </div>
-{outfit && (
-  <div className="mt-6 p-5 rounded-xl bg-white border shadow-sm">
-    
-    <h3 className="text-lg font-semibold mb-4">
-      AI Styled Outfit 🔥
-    </h3>
-
-    <div className="space-y-4">
-      {outfit.items.map((item, i) => (
-        item.data && (
-          <div key={i} className="flex items-center gap-4">
-
-<img
-  src={
-    item.data?.image
-      ? item.data.image.startsWith("http")
-        ? item.data.image
-        : `${BASE_URL}/${item.data.image}`
-      : item.data?.images?.[0]?.url
-      ? item.data.images[0].url.startsWith("http")
-        ? item.data.images[0].url
-        : `${BASE_URL}/${item.data.images[0].url}`
-      : "https://via.placeholder.com/80"
-  }
-  onError={(e) => {
-    e.target.src = "https://via.placeholder.com/80";
-  }}
-  className="w-16 h-16 rounded-lg object-cover bg-gray-100"
-/>
-
-            <div>
-              <p className="text-xs text-gray-400">{item.label}</p>
-              <p className="text-sm font-medium">
-                {item.data.name}
-              </p>
-            </div>
-
-          </div>
-        )
-      ))}
-    </div>
-
-    <p className="text-xs text-gray-400 mt-4">
-      Styled for: {product.name}
-    </p>
-  </div>
-)}
           </div>
         </div>
 
         {/* Tabs Section */}
-       <div className="rounded-[32px] p-10 
-bg-gradient-to-br from-[#f0fdf4] via-[#ecfeff] to-[#eff6ff]
-shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40">
+        <div className="bg-white/80 backdrop-blur rounded-3xl shadow-md p-10 border border-gray-100">
           <div className="flex border-b border-gray-200 mb-6">
             <button
               onClick={() => setActiveTab("description")}
@@ -704,7 +450,7 @@ shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Right: Average Rating */}
                   <div className="lg:col-span-1">
-                    <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-8 border border-white/40 shadow-[0_8px_30px_rgba(0,0,0,0.05)]">
+                    <div className="bg-white rounded-2xl shadow-md p-8 sticky top-6 border border-gray-100">
                       <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
                         Average rating
                       </h3>
@@ -773,11 +519,11 @@ shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40">
                       reviews.map((review) => (
                         <div
                           key={review.id}
-                          className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 shadow-[0_8px_30px_rgba(0,0,0,0.05)] border border-white/40 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition"
+                          className="bg-gray-50 rounded-2xl p-6 shadow-sm"
                         >
                           <div className="flex items-start gap-4">
                             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                             {(review.user_name ? review.user_name[0] : "U").toUpperCase()}
+                              {review.user_name.charAt(0).toUpperCase()}
                             </div>
 
                             <div className="flex-1">
@@ -853,19 +599,18 @@ shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40">
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Your Comment:
                           </label>
-                      <textarea
-                       value={newReview.comment}
-                       onChange={(e) =>
-                       setNewReview({
-                       ...newReview,
-                       comment: e.target.value,
-                       })
-                       }
-                       placeholder="Share your experience..."
-                       rows="4"
-                       className="w-full px-4 py-3 border border-gray-200 rounded-xl 
-                        bg-white/70 backdrop-blur focus:outline-none text-sm shadow-sm"
-                      />
+                          <textarea
+                            value={newReview.comment}
+                            onChange={(e) =>
+                              setNewReview({
+                                ...newReview,
+                                comment: e.target.value,
+                              })
+                            }
+                            placeholder="Share your experience..."
+                            rows="4"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          />
                         </div>
 
                         <button
@@ -917,47 +662,6 @@ shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40">
   </div>
 </div>
       </div>
-      {showStickyBar && (
-  <div className="bg-gradient-to-r from-white/80 to-emerald-50/80 fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-3xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_10px_40px_rgba(0,0,0,0.12)] px-6 py-4 flex items-center justify-between z-50 rounded-2xl animate-[slideUp_0.3s_ease] hover:scale-[1.03] transition-all duration-300">
-    
-    {/* Left: Price + Name */}
-    <div>
-      <p className="text-sm text-gray-500 truncate max-w-[180px]">
-        {product.name}
-      </p>
-      <p className="text-lg font-bold text-gray-900">
-        ₹{salePrice}
-      </p>
-    </div>
-
-    {/* Right: Actions */}
-    <div className="flex items-center gap-3">
-      
-      {/* Wishlist */}
-      <button
-        onClick={handleWishlist}
-        className={`p-2 rounded-full ${
-          liked ? "bg-red-100 text-red-500" : "bg-gray-100"
-        }`}
-      >
-        <Heart size={18} fill={liked ? "currentColor" : "none"} />
-      </button>
-
-      {/* Add to Cart */}
-      <button
-        onClick={handleAddToCart}
-        className="bg-gray-100 px-4 py-2 rounded-lg font-semibold"
-      >
-        Add to Cart
-      </button>
-
-      {/* Buy Now */}
-      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">
-        Buy Now
-      </button>
-    </div>
-  </div>
-)}
     </div>
   );
 };
